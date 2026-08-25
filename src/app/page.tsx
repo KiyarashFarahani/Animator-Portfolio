@@ -24,6 +24,20 @@ export default function Home() {
           <p className="mt-3 text-lg text-white/75 sm:text-xl">
             2D Character Animator &amp; Visual Development Artist
           </p>
+          <div className="mt-8 flex items-center justify-center gap-4 md:justify-start">
+            <button
+              type="button"
+              className="rounded-full bg-white px-7 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-white/85 active:scale-95"
+            >
+              View Projects
+            </button>
+            <button
+              type="button"
+              className="rounded-full border border-white/40 px-7 py-3 text-base font-semibold text-white transition hover:border-white/70 hover:bg-white/10 active:scale-95"
+            >
+              About Me
+            </button>
+          </div>
         </div>
 
         <Image
