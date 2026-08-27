@@ -27,7 +27,7 @@ export default async function ProjectPage({
   const media = await collectMedia(project.dir);
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-white">
+    <main className="min-h-screen text-white">
       <div className="mx-auto max-w-6xl px-6 pb-24 pt-32">
         <Link
           href="/projects"
