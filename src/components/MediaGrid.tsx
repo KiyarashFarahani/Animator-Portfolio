@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import type { MediaItemWithMeta } from "@/lib/media-manifest";
 
@@ -14,6 +14,43 @@ function srcOf(item: MediaItemWithMeta): string {
   return `/${item.src.split("/").map(encodeURIComponent).join("/")}`;
 }
 
+function useColumnCount(): number {
+  const [cols, setCols] = useState(2);
+  useEffect(() => {
+    const queries = [
+      { mq: window.matchMedia("(min-width: 1024px)"), cols: 4 },
+      { mq: window.matchMedia("(min-width: 768px)"), cols: 3 },
+    ];
+    const compute = () => {
+      setCols(queries.find(({ mq }) => mq.matches)?.cols ?? 2);
+    };
+    compute();
+    queries.forEach(({ mq }) => mq.addEventListener("change", compute));
+    return () => queries.forEach(({ mq }) => mq.removeEventListener("change", compute));
+  }, []);
+  return cols;
+}
+
+// shortest-column-first placement: deterministic and append-only, so tiles
+// already on screen keep their position when a new chunk is added
+function distribute(
+  items: MediaItemWithMeta[],
+  cols: number
+): { item: MediaItemWithMeta; index: number }[][] {
+  const columns: { item: MediaItemWithMeta; index: number }[][] = Array.from(
+    { length: cols },
+    () => []
+  );
+  const heights = new Array(cols).fill(0);
+  items.forEach((item, index) => {
+    const aspect = item.meta ? item.meta.h / item.meta.w : 3 / 4;
+    const i = heights.indexOf(Math.min(...heights));
+    columns[i].push({ item, index });
+    heights[i] += aspect;
+  });
+  return columns;
+}
+
 export default function MediaGrid({
   media,
   priorityCount = 0,
@@ -23,7 +60,13 @@ export default function MediaGrid({
 }) {
   const [count, setCount] = useState(() => Math.min(CHUNK_SIZE, media.length));
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const cols = useColumnCount();
   const hasMore = count < media.length;
+
+  const columns = useMemo(
+    () => distribute(media.slice(0, count), cols),
+    [media, count, cols]
+  );
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -59,48 +102,52 @@ export default function MediaGrid({
 
   return (
     <>
-      <div className="columns-2 gap-4 md:columns-3 lg:columns-4 [&>*]:mb-4">
-        {media.slice(0, count).map((item, i) => {
-          const priority = i < priorityCount && item.kind === "image";
-          if (item.kind === "image" && item.meta) {
-            return (
-              <Image
-                key={item.src}
-                src={srcOf(item)}
-                alt={item.name}
-                width={item.meta.w}
-                height={item.meta.h}
-                sizes={SIZES}
-                blurDataURL={item.meta.blur}
-                placeholder="blur"
-                priority={priority}
-                loading={priority ? undefined : "lazy"}
-                className="tile h-auto w-full break-inside-avoid rounded-2xl ring-1 ring-white/10"
-              />
-            );
-          }
-          if (item.kind === "image") {
-            return (
-              <img
-                key={item.src}
-                src={srcOf(item)}
-                alt={item.name}
-                loading="lazy"
-                decoding="async"
-                className="tile w-full break-inside-avoid rounded-2xl ring-1 ring-white/10"
-              />
-            );
-          }
-          return (
-            <video
-              key={item.src}
-              src={srcOf(item)}
-              controls
-              preload="metadata"
-              className="tile aspect-video w-full break-inside-avoid rounded-2xl bg-white/5 ring-1 ring-white/10"
-            />
-          );
-        })}
+      <div className="flex gap-4">
+        {columns.map((column, ci) => (
+          <div key={ci} className="flex min-w-0 flex-1 flex-col gap-4">
+            {column.map(({ item, index }) => {
+              const priority = index < priorityCount && item.kind === "image";
+              if (item.kind === "image" && item.meta) {
+                return (
+                  <Image
+                    key={item.src}
+                    src={srcOf(item)}
+                    alt={item.name}
+                    width={item.meta.w}
+                    height={item.meta.h}
+                    sizes={SIZES}
+                    blurDataURL={item.meta.blur}
+                    placeholder="blur"
+                    priority={priority}
+                    loading={priority ? undefined : "lazy"}
+                    className="tile w-full rounded-2xl ring-1 ring-white/10"
+                  />
+                );
+              }
+              if (item.kind === "image") {
+                return (
+                  <img
+                    key={item.src}
+                    src={srcOf(item)}
+                    alt={item.name}
+                    loading="lazy"
+                    decoding="async"
+                    className="tile w-full rounded-2xl ring-1 ring-white/10"
+                  />
+                );
+              }
+              return (
+                <video
+                  key={item.src}
+                  src={srcOf(item)}
+                  controls
+                  preload="metadata"
+                  className="tile aspect-video w-full rounded-2xl bg-white/5 ring-1 ring-white/10"
+                />
+              );
+            })}
+          </div>
+        ))}
       </div>
       {hasMore && <div ref={sentinelRef} aria-hidden className="h-px" />}
     </>
