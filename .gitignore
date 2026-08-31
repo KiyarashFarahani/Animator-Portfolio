@@ -45,3 +45,6 @@ next-env.d.ts
 /public/Sky Swamp/
 /public/character-concept/
 /public/short movie/
+
+# generated media metadata (regenerated from local media at build)
+/media-manifest.json

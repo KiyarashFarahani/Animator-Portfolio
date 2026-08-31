@@ -1,6 +1,7 @@
 export interface Gallery {
   title: string;
   dir: string;
+  pinned?: string[];
 }
 
 export interface Project {
@@ -8,6 +9,7 @@ export interface Project {
   title: string;
   description: string;
   dir: string;
+  pinned?: string[];
   galleries?: Gallery[];
 }
 

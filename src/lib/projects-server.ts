@@ -43,3 +43,13 @@ export async function collectMedia(dir: string): Promise<MediaItem[]> {
     a.src.localeCompare(b.src, undefined, { numeric: true, sensitivity: "base" })
   );
 }
+
+export function orderMedia(items: MediaItem[], pinned?: string[]): MediaItem[] {
+  if (!pinned?.length) return items;
+  const rank = (item: MediaItem) => {
+    const lower = item.src.toLowerCase();
+    const idx = pinned.findIndex((p) => lower.endsWith(p.toLowerCase()));
+    return idx === -1 ? pinned.length : idx;
+  };
+  return [...items].sort((a, b) => rank(a) - rank(b));
+}
