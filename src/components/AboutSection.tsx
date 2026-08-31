@@ -13,7 +13,7 @@ function Portrait({ priority = false }: { priority?: boolean }) {
   return (
     <div className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-neutral-900/50 ring-1 ring-white/10">
       <Image
-        src="/About/profile.jpeg"
+        src="/About/profile.webp"
         alt="Masoud Azad portrait"
         fill
         priority={priority}
