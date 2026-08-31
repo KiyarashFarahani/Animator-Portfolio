@@ -14,9 +14,14 @@ export async function collectMedia(dir: string): Promise<MediaItem[]> {
   const out: MediaItem[] = [];
 
   async function walk(rel: string): Promise<void> {
-    const entries = await readdir(join(process.cwd(), "public", rel), {
-      withFileTypes: true,
-    });
+    let entries;
+    try {
+      entries = await readdir(join(process.cwd(), "public", rel), {
+        withFileTypes: true,
+      });
+    } catch {
+      return;
+    }
     for (const entry of entries) {
       if (entry.name.startsWith(".")) continue;
       const child = `${rel}/${entry.name}`;
