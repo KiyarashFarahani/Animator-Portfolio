@@ -5,6 +5,7 @@ import Image from "next/image";
 interface SoftwareLogoProps {
   name: string;
   className?: string;
+  showLabel?: boolean;
 }
 
 const logoMap: Record<string, { file: string; alt: string }> = {
@@ -16,19 +17,15 @@ const logoMap: Record<string, { file: string; alt: string }> = {
   "Adobe Premiere Pro": { file: "/logos/adobe-premiere-pro.svg", alt: "Adobe Premiere Pro" },
 };
 
-export default function SoftwareLogo({ name, className = "" }: SoftwareLogoProps) {
+export default function SoftwareLogo({
+  name,
+  className = "",
+  showLabel = false,
+}: SoftwareLogoProps) {
   const logo = logoMap[name];
 
-  if (!logo) {
-    return (
-      <span className={`inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-neutral-900/50 ring-1 ring-white/10 text-white text-xs font-medium ${className}`}>
-        {name}
-      </span>
-    );
-  }
-
-  return (
-    <span className={`inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-neutral-900/50 ring-1 ring-white/10 ${className}`}>
+  const tile = logo ? (
+    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900/50 ring-1 ring-white/10 sm:h-12 sm:w-12">
       <Image
         src={logo.file}
         alt={logo.alt}
@@ -37,6 +34,19 @@ export default function SoftwareLogo({ name, className = "" }: SoftwareLogoProps
         className="object-contain"
         unoptimized
       />
+    </span>
+  ) : (
+    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900/50 px-1 text-center text-[10px] font-medium leading-tight text-white ring-1 ring-white/10 sm:h-12 sm:w-12 sm:text-xs">
+      {name}
+    </span>
+  );
+
+  if (!showLabel) return tile;
+
+  return (
+    <span className={`inline-flex flex-col items-center gap-2 ${className}`}>
+      {tile}
+      <span className="text-xs font-medium text-white/60">{name}</span>
     </span>
   );
 }

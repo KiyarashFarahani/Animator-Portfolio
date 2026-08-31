@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { projects } from "@/lib/projects";
 import { collectMedia } from "@/lib/projects-server";
 import FeaturedProjects from "@/components/FeaturedProjects";
@@ -41,18 +42,18 @@ export default async function Home() {
               2D Character Animator & Visual Development Artist
             </p>
             <div className="mt-8 flex items-center justify-center gap-4 md:justify-start">
-              <button
-                type="button"
+              <Link
+                href="/projects"
                 className="rounded-full bg-white px-7 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-white/85 active:scale-95"
               >
                 View Projects
-              </button>
-              <button
-                type="button"
+              </Link>
+              <Link
+                href="/about"
                 className="rounded-full border border-white/40 px-7 py-3 text-base font-semibold text-white transition hover:border-white/70 hover:bg-white/10 active:scale-95"
               >
                 About Me
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -70,7 +71,7 @@ export default async function Home() {
       </section>
 
       <FeaturedProjects covers={covers} />
-      <AboutSection centered compact />
+      <AboutSection />
     </main>
   );
 }
