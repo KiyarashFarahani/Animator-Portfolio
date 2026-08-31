@@ -71,7 +71,7 @@ export default function FeaturedProjects({ covers }: FeaturedProjectsProps) {
             >
               {covers[i] ? (
                 <Image
-                  src={encodeURI(`/${covers[i]!.src}`)}
+                  src={`/${covers[i]!.src}`}
                   alt={project.title}
                   fill
                   sizes="(max-width: 640px) 80vw, 20vw"

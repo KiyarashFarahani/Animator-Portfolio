@@ -22,7 +22,7 @@ export const projects: Project[] = [
     slug: "character-concept",
     title: "Character & Concept",
     description: "Character sheets and visual development explorations.",
-    dir: "character& concept",
+    dir: "character-concept",
   },
   {
     slug: "short-movies",
