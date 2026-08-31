@@ -36,3 +36,9 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* skip layout/paint of offscreen gallery tiles */
+.tile {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
+}

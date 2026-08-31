@@ -1,11 +1,10 @@
-/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { collectMedia, orderMedia } from "@/lib/projects-server";
-import { attachMeta, type MediaItemWithMeta } from "@/lib/media-manifest";
+import { attachMeta } from "@/lib/media-manifest";
 import { projects } from "@/lib/projects";
+import MediaGrid from "@/components/MediaGrid";
 
 export function generateStaticParams() {
   return projects.map((project) => ({ slug: project.slug }));
@@ -18,8 +17,6 @@ export async function generateMetadata({
   const project = projects.find((p) => p.slug === slug);
   return { title: project ? `${project.title} — Masoud Azad` : "Project — Masoud Azad" };
 }
-
-const SIZES = "(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 264px";
 
 export default async function ProjectPage({
   params,
@@ -76,59 +73,5 @@ export default async function ProjectPage({
         )}
       </div>
     </main>
-  );
-}
-
-function MediaGrid({
-  media,
-  priorityCount = 0,
-}: {
-  media: MediaItemWithMeta[];
-  priorityCount?: number;
-}) {
-  return (
-    <div className="columns-2 gap-4 md:columns-3 lg:columns-4 [&>*]:mb-4">
-      {media.map((item, i) => {
-        const priority = i < priorityCount && item.kind === "image";
-        if (item.kind === "image" && item.meta) {
-          return (
-            <Image
-              key={item.src}
-              src={encodeURI(`/${item.src}`)}
-              alt={item.name}
-              width={item.meta.w}
-              height={item.meta.h}
-              sizes={SIZES}
-              blurDataURL={item.meta.blur}
-              placeholder="blur"
-              priority={priority}
-              loading={priority ? undefined : "lazy"}
-              className="h-auto w-full break-inside-avoid rounded-2xl ring-1 ring-white/10"
-            />
-          );
-        }
-        if (item.kind === "image") {
-          return (
-            <img
-              key={item.src}
-              src={encodeURI(`/${item.src}`)}
-              alt={item.name}
-              loading="lazy"
-              decoding="async"
-              className="w-full break-inside-avoid rounded-2xl ring-1 ring-white/10"
-            />
-          );
-        }
-        return (
-          <video
-            key={item.src}
-            src={encodeURI(`/${item.src}`)}
-            controls
-            preload="metadata"
-            className="aspect-video w-full break-inside-avoid rounded-2xl bg-white/5 ring-1 ring-white/10"
-          />
-        );
-      })}
-    </div>
   );
 }
