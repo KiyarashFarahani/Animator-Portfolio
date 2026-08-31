@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local media (too large for git)
+/public/Animate/
+/public/Sky Swamp/
+/public/character-concept/
+/public/short movie/
+/public/About/
+/public/logos/
