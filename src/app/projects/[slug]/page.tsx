@@ -5,6 +5,7 @@ import { collectMedia, orderMedia } from "@/lib/projects-server";
 import { attachMeta } from "@/lib/media-manifest";
 import { projects } from "@/lib/projects";
 import MediaGrid from "@/components/MediaGrid";
+import StoryView from "@/components/StoryView";
 
 export function generateStaticParams() {
   return projects.map((project) => ({ slug: project.slug }));
@@ -24,6 +25,10 @@ export default async function ProjectPage({
   const { slug } = await params;
   const project = projects.find((p) => p.slug === slug);
   if (!project) notFound();
+
+  if (project.story) {
+    return <StoryView project={project} />;
+  }
 
   const galleries = project.galleries
     ? await Promise.all(
