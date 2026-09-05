@@ -8,6 +8,9 @@ export const metadata = { title: "Projects — Masoud Azad" };
 export default async function ProjectsPage() {
   const covers = await Promise.all(
     projects.map(async (project) => {
+      if (project.thumbnail) {
+        return { src: project.thumbnail, name: project.thumbnail, kind: "image" as const };
+      }
       const media = await collectMedia(project.dir);
       return media.find((item) => item.kind === "image");
     })

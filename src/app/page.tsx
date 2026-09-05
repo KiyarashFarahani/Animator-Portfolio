@@ -8,6 +8,9 @@ import AboutSection from "@/components/AboutSection";
 async function getProjectCovers() {
   const covers = await Promise.all(
     projects.map(async (project) => {
+      if (project.thumbnail) {
+        return { src: project.thumbnail, name: project.thumbnail, kind: "image" as const };
+      }
       const media = await collectMedia(project.dir);
       return media.find((item) => item.kind === "image") ?? null;
     })
@@ -30,7 +33,7 @@ export default async function Home() {
           className="object-cover select-none pointer-events-none"
           draggable={false}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/10 to-transparent max-md:bg-gradient-to-t max-md:from-black/60 max-md:via-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
 
         <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col-reverse items-center justify-center gap-8 px-6 py-12 md:flex-row md:items-center md:justify-between md:gap-4 md:px-12 lg:px-16 md:py-0">
           <div className="max-w-xl text-center md:text-left">
@@ -70,8 +73,8 @@ export default async function Home() {
         </div>
       </section>
 
-      <FeaturedProjects covers={covers} />
-      <AboutSection />
+<FeaturedProjects covers={covers} />
+       <AboutSection variant="full" />
     </main>
   );
 }
