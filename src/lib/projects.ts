@@ -52,7 +52,7 @@ export const projects: Project[] = [
     title: "Animation",
     description: "Looping character animations, acting shots and motion studies.",
     dir: "Animate",
-    thumbnail: "Animate/02.gif",
+    thumbnail: "Animate/20260405210941_720P.gif",
   },
   {
     slug: "sky-swamp",
@@ -74,7 +74,7 @@ export const projects: Project[] = [
     title: "Character & Concept",
     description: "Character sheets and visual development explorations.",
     dir: "character-concept",
-    thumbnail: "character-concept/Ch01/22.jpg",
+    thumbnail: "character-concept/Ch01/01-cropped.jpg",
     galleries: [
       { title: "Characters", dir: "character-concept/Ch01" },
       { title: "Concepts", dir: "character-concept/Co" },
