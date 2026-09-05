@@ -54,13 +54,20 @@ function distribute(
 export default function MediaGrid({
   media,
   priorityCount = 0,
+  maxCols,
 }: {
   media: MediaItemWithMeta[];
   priorityCount?: number;
+  /** cap column count — used when the grid sits in a narrow (e.g. split) column */
+  maxCols?: number;
 }) {
   const [count, setCount] = useState(() => Math.min(CHUNK_SIZE, media.length));
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const cols = useColumnCount();
+  const colCount = useColumnCount();
+  const cols = Math.min(colCount, maxCols ?? 4);
+  // tile width follows the breakpoint's standard column count, so sparse
+  // galleries keep standard-size tiles and center instead of stretching
+  const basis = maxCols ?? colCount;
   const hasMore = count < media.length;
 
   const columns = useMemo(
@@ -102,9 +109,15 @@ export default function MediaGrid({
 
   return (
     <>
-      <div className="flex gap-4">
-        {columns.map((column, ci) => (
-          <div key={ci} className="flex min-w-0 flex-1 flex-col gap-4">
+      <div className="flex justify-center gap-4">
+        {columns
+          .filter((column) => column.length > 0)
+          .map((column, ci) => (
+            <div
+              key={ci}
+              style={{ width: `calc((100% - ${basis - 1}rem) / ${basis})` }}
+              className="flex min-w-0 flex-col gap-4"
+            >
             {column.map(({ item, index }) => {
               const priority = index < priorityCount && item.kind === "image";
               if (item.kind === "image" && item.meta) {
