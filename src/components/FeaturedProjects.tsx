@@ -24,16 +24,16 @@ export default function FeaturedProjects({ covers }: FeaturedProjectsProps) {
     const wrapper = wrapperRef.current;
     if (!container || !wrapper) return;
 
-    const scrollWidth = wrapper.scrollWidth - container.clientWidth;
+    const getDistance = () => wrapper.scrollWidth - wrapper.clientWidth;
 
     const tl = gsap.to(wrapper, {
-      x: -scrollWidth,
+      x: () => -getDistance(),
       ease: "none",
       scrollTrigger: {
         trigger: container,
         pin: true,
         start: "center center",
-        end: () => `+=${scrollWidth}`,
+        end: () => `+=${getDistance()}`,
         scrub: 1,
         invalidateOnRefresh: true,
         anticipatePin: 1,
@@ -58,16 +58,16 @@ export default function FeaturedProjects({ covers }: FeaturedProjectsProps) {
         </Link>
       </div>
 
-      <div className="relative h-[320px] lg:h-[380px]" ref={wrapperRef}>
+      <div className="relative" ref={wrapperRef}>
         <div
-          className="flex gap-6 h-full pb-6"
+          className="flex gap-6"
           style={{ width: "max-content" }}
         >
           {projects.map((project, i) => (
             <Link
               key={project.slug}
               href={`/projects/${project.slug}`}
-              className="group relative flex-shrink-0 w-[320px] sm:w-[400px] lg:w-[480px] rounded-2xl bg-neutral-900/50 ring-1 ring-white/10 overflow-hidden transition hover:ring-white/30 hover:bg-neutral-900"
+              className="group relative flex-shrink-0 aspect-[16/10] w-[320px] sm:w-[400px] lg:w-[480px] rounded-2xl bg-neutral-900/50 ring-1 ring-white/10 overflow-hidden transition hover:ring-white/30 hover:bg-neutral-900"
             >
               {covers[i] ? (
                 <Image
@@ -78,7 +78,7 @@ export default function FeaturedProjects({ covers }: FeaturedProjectsProps) {
                   className="object-cover transition duration-300 group-hover:scale-[1.03]"
                 />
               ) : (
-                <div className="aspect-[21/9] w-full bg-neutral-800" />
+                <div className="h-full w-full bg-neutral-800" />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-5 flex flex-col justify-end">
                 <h3 className="text-lg font-bold text-white group-hover:text-white/90">
