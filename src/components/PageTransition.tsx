@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const EASE_COVER = "power3.inOut";
 const EASE_REVEAL = "power3.out";
@@ -114,6 +115,13 @@ export default function PageTransition({ children }: { children: React.ReactNode
     const wasCovering = coveringRef.current;
 
     const ctx = gsap.context(() => {
+      const finish = () => {
+        gsap.set([root, ...kids], { clearProps: "transform" });
+        requestAnimationFrame(() => {
+          window.dispatchEvent(new CustomEvent("ma:page-transition-done"));
+          ScrollTrigger.refresh();
+        });
+      };
       if (wasCovering) {
         gsap.set(root, { autoAlpha: 0, y: 8 });
         if (kids.length) gsap.set(kids, { y: 18, autoAlpha: 0 });
@@ -123,6 +131,7 @@ export default function PageTransition({ children }: { children: React.ReactNode
           defaults: { overwrite: true },
           onComplete: () => {
             coveringRef.current = false;
+            finish();
           },
         });
         if (kids.length) tl.to(kids, { y: 0, autoAlpha: 1, duration: 0.5, stagger: 0.07, ease: EASE_REVEAL }, 0.08);
@@ -135,7 +144,7 @@ export default function PageTransition({ children }: { children: React.ReactNode
       gsap.set(root, { autoAlpha: 0, y: 8 });
       if (kids.length) gsap.set(kids, { y: 18, autoAlpha: 0 });
 
-      const tl = gsap.timeline({ defaults: { overwrite: true } });
+      const tl = gsap.timeline({ defaults: { overwrite: true }, onComplete: finish });
       tl.to(overlay, { yPercent: 0, duration: 0.45, ease: EASE_COVER });
       tl.add(() => window.scrollTo(0, 0));
       tl.set(root, { autoAlpha: 1 });

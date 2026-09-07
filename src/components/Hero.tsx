@@ -4,6 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Hero() {
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -25,29 +28,63 @@ export default function Hero() {
       art: artRef.current,
     };
 
-    gsap.set(els.bg, { scale: 1.08, filter: "blur(8px)" });
-    gsap.set(els.text, { y: 28, autoAlpha: 0 });
-    gsap.set(els.art, { x: 48, scale: 0.97, autoAlpha: 0 });
-
+    let played = false;
+    let raf = 0;
     const play = () => {
+      if (played) return;
+      played = true;
+      cancelAnimationFrame(raf);
+      gsap.set(els.bg, { scale: 1.08, filter: "blur(8px)" });
+      gsap.set(els.text, { y: 28, autoAlpha: 0 });
+      gsap.set(els.art, { x: 48, scale: 0.97, autoAlpha: 0 });
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
       tl.to(els.bg, { scale: 1, filter: "blur(0px)", duration: 1.2, ease: "power2.out" }, 0);
       tl.to(els.text, { y: 0, autoAlpha: 1, duration: 0.7, stagger: 0.08 }, 0.15);
       tl.to(els.art, { x: 0, scale: 1, autoAlpha: 1, duration: 0.9, ease: "power3.out" }, 0.2);
+      tl.eventCallback("onComplete", () => ScrollTrigger.refresh());
       return tl;
     };
 
-    const splashState = document.documentElement.dataset.maSplash;
-    const splashSeen = document.documentElement.classList.contains("ma-splash-seen");
+    const isVisible = () => {
+      const r = section.getBoundingClientRect();
+      return r.width > 0 && r.height > 0 && getComputedStyle(section).visibility !== "hidden";
+    };
 
-    if (splashState === "done" || splashSeen || splashState === undefined) {
+    const tryPlay = () => {
+      if (!isVisible()) {
+        raf = requestAnimationFrame(tryPlay);
+        return;
+      }
       play();
-      return;
+    };
+
+    if (document.visibilityState === "hidden") {
+      const onVisible = () => {
+        if (document.visibilityState === "visible") {
+          document.removeEventListener("visibilitychange", onVisible);
+          tryPlay();
+        }
+      };
+      document.addEventListener("visibilitychange", onVisible);
+      return () => document.removeEventListener("visibilitychange", onVisible);
     }
 
-    const onExit = () => play();
+    const splashState = document.documentElement.dataset.maSplash;
+    const splashSeen = document.documentElement.classList.contains("ma-splash-seen");
+    if (splashState === "done" || splashSeen || splashState === undefined) {
+      tryPlay();
+      return () => cancelAnimationFrame(raf);
+    }
+
+    const onExit = () => tryPlay();
+    const onPageDone = () => tryPlay();
     window.addEventListener("ma:splash-exit", onExit, { once: true });
-    return () => window.removeEventListener("ma:splash-exit", onExit);
+    window.addEventListener("ma:page-transition-done", onPageDone, { once: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("ma:splash-exit", onExit);
+      window.removeEventListener("ma:page-transition-done", onPageDone);
+    };
   }, []);
 
   return (

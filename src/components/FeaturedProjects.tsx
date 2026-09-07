@@ -24,25 +24,44 @@ export default function FeaturedProjects({ covers }: FeaturedProjectsProps) {
     const wrapper = wrapperRef.current;
     if (!container || !wrapper) return;
 
-    const getDistance = () => wrapper.scrollWidth - wrapper.clientWidth;
+    let ctx: gsap.Context | null = null;
+    const mm = gsap.matchMedia();
 
-    const tl = gsap.to(wrapper, {
-      x: () => -getDistance(),
-      ease: "none",
-      scrollTrigger: {
-        trigger: container,
-        pin: true,
-        start: "center center",
-        end: () => `+=${getDistance()}`,
-        scrub: 1,
-        invalidateOnRefresh: true,
-        anticipatePin: 1,
-      },
+    const create = () => {
+      ctx?.revert();
+      ctx = gsap.context(() => {
+        const getDistance = () => Math.max(0, wrapper.scrollWidth - wrapper.clientWidth);
+        gsap.to(wrapper, {
+          x: () => -getDistance(),
+          ease: "none",
+          scrollTrigger: {
+            trigger: container,
+            pin: true,
+            start: "center center",
+            end: () => `+=${getDistance()}`,
+            scrub: 1,
+            invalidateOnRefresh: true,
+            anticipatePin: 1,
+          },
+        });
+      }, container);
+    };
+
+    mm.add("(min-width: 768px)", () => {
+      create();
+      return () => ctx?.revert();
     });
 
+    const onDone = () => requestAnimationFrame(() => ScrollTrigger.refresh());
+    window.addEventListener("ma:page-transition-done", onDone);
+    window.addEventListener("ma:splash-done", onDone);
+    if (document.fonts?.ready) document.fonts.ready.then(onDone);
+
     return () => {
-      tl.scrollTrigger?.kill();
-      tl.kill();
+      window.removeEventListener("ma:page-transition-done", onDone);
+      window.removeEventListener("ma:splash-done", onDone);
+      mm.revert();
+      ctx?.revert();
     };
   }, [covers]);
 
