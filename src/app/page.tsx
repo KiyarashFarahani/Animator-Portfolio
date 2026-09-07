@@ -35,8 +35,8 @@ export default async function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
 
-        <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col-reverse items-center justify-center gap-8 px-6 py-12 md:flex-row md:items-center md:justify-between md:gap-4 md:px-12 lg:px-16 md:py-0">
-          <div className="max-w-xl text-center md:text-left">
+        <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col-reverse items-center justify-center gap-8 px-6 py-12 md:flex-row md:items-center md:justify-between md:gap-2 md:px-8 lg:px-12 md:py-0">
+          <div className="max-w-xl shrink-0 text-center md:text-left">
             <p className="text-white/75 text-lg sm:text-xl">Hi, I&apos;m</p>
             <h1 className="mt-2 text-5xl font-bold leading-tight text-white drop-shadow-lg sm:text-6xl lg:text-7xl">
               Masoud Azad
@@ -60,14 +60,12 @@ export default async function Home() {
             </div>
           </div>
 
-          <Image
-            src="/Hero/dusha_02_CH.png"
+          <img
+            src="/Hero/animation.gif"
             alt="Masoud Azad character illustration"
-            width={3474}
-            height={4961}
-            priority
-            sizes="(max-width: 768px) 80vw, 45vw"
-            className="h-auto w-64 object-contain select-none drop-shadow-2xl sm:w-80 md:w-[42%] md:max-w-[560px] lg:w-[46%]"
+            width={1920}
+            height={1920}
+            className="h-auto w-[94vw] max-w-[560px] object-contain select-none drop-shadow-2xl sm:max-w-[600px] md:w-auto md:flex-1 md:min-w-0 md:max-h-[92vh] md:max-w-none md:mr-[calc(50%-50vw-2rem)] lg:mr-[calc(50%-50vw-3rem)]"
             draggable={false}
           />
         </div>
