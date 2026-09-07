@@ -1,7 +1,16 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type TouchEvent as ReactTouchEvent,
+  type WheelEvent as ReactWheelEvent,
+} from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { gsap } from "gsap";
@@ -22,12 +31,34 @@ function srcOf(item: MediaItemWithMeta): string {
 
 const isGif = (src: string) => /\.gif$/i.test(src);
 
+// centered rect fitting the item's aspect into 90vw x 80vh
+function targetFor(item: MediaItemWithMeta, vw: number, vh: number, origin: OriginRect) {
+  const aspect =
+    item.meta && item.meta.w > 0 && item.meta.h > 0
+      ? item.meta.w / item.meta.h
+      : origin.width > 0 && origin.height > 0
+        ? origin.width / origin.height
+        : 4 / 3;
+  let width = vw * 0.9;
+  let height = width / aspect;
+  const maxH = vh * 0.8;
+  if (height > maxH) {
+    height = maxH;
+    width = height * aspect;
+  }
+  return { left: (vw - width) / 2, top: (vh - height) / 2, width, height };
+}
+
 export default function MediaViewer({
-  item,
+  items,
+  index,
   origin,
   onClose,
 }: {
-  item: MediaItemWithMeta;
+  /** full navigable list (gallery, beat images, …) */
+  items: MediaItemWithMeta[];
+  /** index of the initially opened item */
+  index: number;
   origin: OriginRect;
   onClose: () => void;
 }) {
@@ -39,10 +70,48 @@ export default function MediaViewer({
     () => false
   );
 
+  const [current, setCurrent] = useState(index);
+  const currentRef = useRef(index);
+  const dirRef = useRef<1 | -1>(1);
+  const busyRef = useRef(false);
+  const openedRef = useRef(false);
+  const enteredRef = useRef(false);
+  const closingRef = useRef(false);
+  const lastNavRef = useRef(0);
+  const touchRef = useRef<{ x: number; y: number } | null>(null);
+
   const backdropRef = useRef<HTMLDivElement>(null);
   const tileRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const chromeRef = useRef<HTMLDivElement>(null);
-  const closingRef = useRef(false);
+
+  const count = items.length;
+
+  const go = useCallback(
+    (dir: 1 | -1) => {
+      if (count < 2 || busyRef.current || closingRef.current || !openedRef.current) return;
+      busyRef.current = true;
+      dirRef.current = dir;
+      const el = contentRef.current;
+      if (!el) {
+        busyRef.current = false;
+        return;
+      }
+      // slide current content out, then swap (enter runs via effect below)
+      gsap.to(el, {
+        x: -90 * dir,
+        opacity: 0,
+        duration: 0.22,
+        ease: "power2.in",
+        onComplete: () => {
+          const next = (currentRef.current + dir + count) % count;
+          currentRef.current = next;
+          setCurrent(next);
+        },
+      });
+    },
+    [count]
+  );
 
   const close = useCallback(() => {
     if (closingRef.current) return;
@@ -51,6 +120,7 @@ export default function MediaViewer({
       return;
     }
     closingRef.current = true;
+    gsap.killTweensOf(contentRef.current);
     gsap.to(chromeRef.current, { opacity: 0, duration: 0.2, ease: "power2.in" });
     gsap.to(backdropRef.current, {
       opacity: 0,
@@ -69,10 +139,12 @@ export default function MediaViewer({
     });
   }, [origin, onClose]);
 
-  // Escape to close + scroll lock
+  // keys: Escape closes, arrows navigate
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
+      else if (e.key === "ArrowRight") go(1);
+      else if (e.key === "ArrowLeft") go(-1);
     };
     window.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
@@ -81,7 +153,7 @@ export default function MediaViewer({
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [close]);
+  }, [close, go]);
 
   // FLIP open animation: tile starts exactly over the thumbnail,
   // then maximizes to a centered rect fitted to the viewport
@@ -90,24 +162,6 @@ export default function MediaViewer({
     const backdrop = backdropRef.current;
     const chrome = chromeRef.current;
     if (!tile || !backdrop) return;
-
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const aspect =
-      item.meta && item.meta.w > 0 && item.meta.h > 0
-        ? item.meta.w / item.meta.h
-        : origin.width > 0 && origin.height > 0
-          ? origin.width / origin.height
-          : 4 / 3;
-
-    // max viewer footprint: 90vw wide, 80vh tall (room for caption/close)
-    let targetW = vw * 0.9;
-    let targetH = targetW / aspect;
-    const maxH = vh * 0.8;
-    if (targetH > maxH) {
-      targetH = maxH;
-      targetW = targetH * aspect;
-    }
 
     gsap.set(tile, {
       left: origin.left,
@@ -119,12 +173,12 @@ export default function MediaViewer({
     gsap.set(chrome, { opacity: 0 });
 
     const open = gsap.to(tile, {
-      left: (vw - targetW) / 2,
-      top: (vh - targetH) / 2,
-      width: targetW,
-      height: targetH,
+      ...targetFor(items[index], window.innerWidth, window.innerHeight, origin),
       duration: 0.4,
       ease: "power3.out",
+      onComplete: () => {
+        openedRef.current = true;
+      },
     });
     gsap.to(backdrop, { opacity: 1, duration: 0.35, ease: "power2.out" });
     gsap.to(chrome, { opacity: 1, duration: 0.3, delay: 0.25 });
@@ -136,57 +190,130 @@ export default function MediaViewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // enter animation after navigating: resize tile to the new aspect
+  // while the new content slides in from the travel direction
+  useLayoutEffect(() => {
+    if (!enteredRef.current) {
+      enteredRef.current = true;
+      return;
+    }
+    const tile = tileRef.current;
+    const content = contentRef.current;
+    if (!tile || !content) {
+      busyRef.current = false;
+      return;
+    }
+    gsap.set(content, { x: 90 * dirRef.current, opacity: 0 });
+    gsap.to(tile, {
+      ...targetFor(items[current], window.innerWidth, window.innerHeight, origin),
+      duration: 0.3,
+      ease: "power3.out",
+    });
+    gsap.to(content, {
+      x: 0,
+      opacity: 1,
+      duration: 0.3,
+      ease: "power3.out",
+      onComplete: () => {
+        busyRef.current = false;
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current]);
+
+  // scroll to slide: dominant wheel axis, debounced so one gesture = one step
+  const onWheel = (e: ReactWheelEvent) => {
+    if (count < 2) return;
+    const now = Date.now();
+    if (now - lastNavRef.current < 800) return;
+    const ax = Math.abs(e.deltaX);
+    const ay = Math.abs(e.deltaY);
+    if (Math.max(ax, ay) < 20) return;
+    lastNavRef.current = now;
+    go(ax > ay ? (e.deltaX > 0 ? 1 : -1) : e.deltaY > 0 ? 1 : -1);
+  };
+
+  const onTouchStart = (e: ReactTouchEvent) => {
+    const t = e.touches[0];
+    touchRef.current = { x: t.clientX, y: t.clientY };
+  };
+  const onTouchEnd = (e: ReactTouchEvent) => {
+    const s = touchRef.current;
+    touchRef.current = null;
+    if (!s || count < 2) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - s.x;
+    const dy = t.clientY - s.y;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) {
+      go(dx < 0 ? 1 : -1);
+    }
+  };
+
   if (!mounted) return null;
 
+  const item = items[current] ?? items[index];
   // Same image pipeline as the grid (optimizer + inline blur placeholder),
   // so first open reuses cached variants instead of flashing in a fresh
   // full-size download. GIFs stay on plain <img> to preserve animation.
   const useOptimized = item.kind === "image" && item.meta && !isGif(item.src);
 
+  const navBtn =
+    "pointer-events-auto absolute top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white ring-1 ring-white/20 transition hover:bg-white/20 active:scale-95";
+
   return createPortal(
-    <>
+    <div
+      onWheel={onWheel}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      className="fixed inset-0 z-[100]"
+    >
       <div
         ref={backdropRef}
         onClick={close}
-        className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/85 backdrop-blur-sm"
         aria-hidden
       />
       {/* floating tile: morphs from thumbnail rect to centered viewer */}
       <div
         ref={tileRef}
-        className="fixed z-[100] overflow-hidden rounded-2xl bg-neutral-900 ring-1 ring-white/15"
+        className="absolute overflow-hidden rounded-2xl bg-neutral-900 ring-1 ring-white/15"
       >
-        {item.kind === "video" ? (
-          <video
-            src={srcOf(item)}
-            controls
-            autoPlay
-            playsInline
-            preload="auto"
-            className="h-full w-full object-cover"
-          />
-        ) : useOptimized ? (
-          <Image
-            src={srcOf(item)}
-            alt={item.name}
-            fill
-            sizes="90vw"
-            priority
-            placeholder="blur"
-            blurDataURL={item.meta!.blur}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <img
-            src={srcOf(item)}
-            alt={item.name}
-            className="h-full w-full object-cover"
-            draggable={false}
-          />
-        )}
+        <div ref={contentRef} className="h-full w-full">
+          {item.kind === "video" ? (
+            <video
+              key={item.src}
+              src={srcOf(item)}
+              controls
+              autoPlay
+              playsInline
+              preload="auto"
+              className="h-full w-full object-cover"
+            />
+          ) : useOptimized ? (
+            <Image
+              key={item.src}
+              src={srcOf(item)}
+              alt={item.name}
+              fill
+              sizes="90vw"
+              priority
+              placeholder="blur"
+              blurDataURL={item.meta!.blur}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <img
+              key={item.src}
+              src={srcOf(item)}
+              alt={item.name}
+              className="h-full w-full object-cover"
+              draggable={false}
+            />
+          )}
+        </div>
       </div>
       {/* chrome fades in after the maximize lands */}
-      <div ref={chromeRef} className="pointer-events-none fixed inset-0 z-[100]">
+      <div ref={chromeRef} className="pointer-events-none absolute inset-0">
         <button
           onClick={close}
           aria-label="Close viewer"
@@ -205,13 +332,43 @@ export default function MediaViewer({
             />
           </svg>
         </button>
+        {count > 1 && (
+          <>
+            <button
+              onClick={() => go(-1)}
+              aria-label="Previous image"
+              className={`${navBtn} left-3 sm:left-5`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+            <button
+              onClick={() => go(1)}
+              aria-label="Next image"
+              className={`${navBtn} right-3 sm:right-5`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M7.21 5.23a.75.75 0 01.02 1.06L11.168 10l-3.938 3.71a.75.75 0 111.04 1.08l4.5-4.25a.75.75 0 010-1.08l-4.5-4.25a.75.75 0 01-1.06-.02z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+          </>
+        )}
         {/* filename caption hidden for now — restore when needed
         <p className="absolute inset-x-0 bottom-5 mx-auto w-fit max-w-[90vw] truncate rounded-full bg-white/10 px-4 py-1.5 text-sm text-white/70 ring-1 ring-white/15">
           {item.name}
         </p>
         */}
       </div>
-    </>,
+    </div>,
     document.body
   );
 }

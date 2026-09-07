@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import MediaGrid from "@/components/MediaGrid";
+import ViewableMedia from "@/components/ViewableMedia";
 import { attachMeta } from "@/lib/media-manifest";
 import type { MediaItemWithMeta, MediaMeta } from "@/lib/media-manifest";
 import type { Project, StoryBeat, StoryChapter } from "@/lib/projects";
@@ -23,23 +24,27 @@ function Feature({ item, caption }: { item: MediaItemWithMeta; caption?: string 
   if (!item.meta || !dims) {
     return (
       <figure className="flex flex-col items-center">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={srcOf(item)} alt={item.name} className="w-full rounded-3xl ring-1 ring-white/10" />
+        <ViewableMedia item={item} className="block w-full cursor-zoom-in">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={srcOf(item)} alt={item.name} className="w-full rounded-3xl ring-1 ring-white/10" />
+        </ViewableMedia>
       </figure>
     );
   }
   return (
     <figure className="flex flex-col items-center">
-      <Image
-        src={srcOf(item)}
-        alt={caption ?? item.name}
-        width={dims.w}
-        height={dims.h}
-        blurDataURL={item.meta.blur}
-        placeholder="blur"
-        sizes={`${dims.w}px`}
-        className={`${SHOWCASE_CLS} rounded-3xl`}
-      />
+      <ViewableMedia item={item}>
+        <Image
+          src={srcOf(item)}
+          alt={caption ?? item.name}
+          width={dims.w}
+          height={dims.h}
+          blurDataURL={item.meta.blur}
+          placeholder="blur"
+          sizes={`${dims.w}px`}
+          className={`${SHOWCASE_CLS} rounded-3xl`}
+        />
+      </ViewableMedia>
       {caption ? (
         <figcaption className="mt-3 text-center text-sm text-white/50">{caption}</figcaption>
       ) : null}
@@ -54,28 +59,40 @@ function Duo({ items }: { items: MediaItemWithMeta[] }) {
         const dims = scaledDims(item.meta, 400);
         if (!item.meta || !dims) {
           return (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <ViewableMedia
               key={item.src}
-              src={srcOf(item)}
-              alt={item.name}
-              loading="lazy"
-              className={SHOWCASE_CLS}
-            />
+              item={item}
+              siblings={items}
+              className="w-fit max-w-full cursor-zoom-in justify-self-center"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={srcOf(item)}
+                alt={item.name}
+                loading="lazy"
+                className={SHOWCASE_CLS}
+              />
+            </ViewableMedia>
           );
         }
         return (
-          <Image
+          <ViewableMedia
             key={item.src}
-            src={srcOf(item)}
-            alt={item.name}
-            width={dims.w}
-            height={dims.h}
-            blurDataURL={item.meta.blur}
-            placeholder="blur"
-            sizes={`${dims.w}px`}
-            className={SHOWCASE_CLS}
-          />
+            item={item}
+            siblings={items}
+            className="w-fit max-w-full cursor-zoom-in justify-self-center"
+          >
+            <Image
+              src={srcOf(item)}
+              alt={item.name}
+              width={dims.w}
+              height={dims.h}
+              blurDataURL={item.meta.blur}
+              placeholder="blur"
+              sizes={`${dims.w}px`}
+              className={SHOWCASE_CLS}
+            />
+          </ViewableMedia>
         );
       })}
     </div>
@@ -163,7 +180,9 @@ function Split({ beat, get }: { beat: StoryBeat; get: (names: string[]) => Media
           }
         >
           {items.map((item) => (
-            <SplitImage key={item.src} item={item} />
+            <ViewableMedia key={item.src} item={item} siblings={items}>
+              <SplitImage item={item} />
+            </ViewableMedia>
           ))}
         </div>
         {beat.caption ? (
@@ -219,28 +238,40 @@ function Beat({
             const dims = scaledDims(item.meta, 340);
             if (!item.meta || !dims) {
               return (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
+                <ViewableMedia
                   key={item.src}
-                  src={srcOf(item)}
-                  alt={item.name}
-                  loading="lazy"
-                  className={SHOWCASE_CLS}
-                />
+                  item={item}
+                  siblings={items}
+                  className="w-fit max-w-full cursor-zoom-in justify-self-center"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={srcOf(item)}
+                    alt={item.name}
+                    loading="lazy"
+                    className={SHOWCASE_CLS}
+                  />
+                </ViewableMedia>
               );
             }
             return (
-              <Image
+              <ViewableMedia
                 key={item.src}
-                src={srcOf(item)}
-                alt={item.name}
-                width={dims.w}
-                height={dims.h}
-                blurDataURL={item.meta.blur}
-                placeholder="blur"
-                sizes={`${dims.w}px`}
-                className={SHOWCASE_CLS}
-              />
+                item={item}
+                siblings={items}
+                className="w-fit max-w-full cursor-zoom-in justify-self-center"
+              >
+                <Image
+                  src={srcOf(item)}
+                  alt={item.name}
+                  width={dims.w}
+                  height={dims.h}
+                  blurDataURL={item.meta.blur}
+                  placeholder="blur"
+                  sizes={`${dims.w}px`}
+                  className={SHOWCASE_CLS}
+                />
+              </ViewableMedia>
             );
           })}
         </div>
@@ -342,22 +373,26 @@ function HeroImage({ item, alt }: { item: MediaItemWithMeta; alt: string }) {
   const dims = scaledDims(item.meta, 560);
   if (!item.meta || !dims) {
     return (
-      /* eslint-disable-next-line @next/next/no-img-element */
-      <img src={srcOf(item)} alt={alt} className="w-full rounded-3xl ring-1 ring-white/10" />
+      <ViewableMedia item={item} className="block w-full cursor-zoom-in">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={srcOf(item)} alt={alt} className="w-full rounded-3xl ring-1 ring-white/10" />
+      </ViewableMedia>
     );
   }
   return (
-    <Image
-      src={srcOf(item)}
-      alt={alt}
-      width={dims.w}
-      height={dims.h}
-      blurDataURL={item.meta.blur}
-      placeholder="blur"
-      priority
-      sizes="(min-width: 768px) 50vw, 100vw"
-      className={`${SHOWCASE_CLS} rounded-3xl`}
-    />
+    <ViewableMedia item={item} className="block w-full cursor-zoom-in">
+      <Image
+        src={srcOf(item)}
+        alt={alt}
+        width={dims.w}
+        height={dims.h}
+        blurDataURL={item.meta.blur}
+        placeholder="blur"
+        priority
+        sizes="(min-width: 768px) 50vw, 100vw"
+        className={`${SHOWCASE_CLS} rounded-3xl`}
+      />
+    </ViewableMedia>
   );
 }
 
@@ -372,22 +407,26 @@ function FullWidthImage({
 }) {
   if (!item.meta) {
     return (
-      /* eslint-disable-next-line @next/next/no-img-element */
-      <img src={srcOf(item)} alt={alt} className="w-full rounded-3xl ring-1 ring-white/10" />
+      <ViewableMedia item={item} className="block w-full cursor-zoom-in">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={srcOf(item)} alt={alt} className="w-full rounded-3xl ring-1 ring-white/10" />
+      </ViewableMedia>
     );
   }
   return (
-    <Image
-      src={srcOf(item)}
-      alt={alt}
-      width={item.meta.w}
-      height={item.meta.h}
-      blurDataURL={item.meta.blur}
-      placeholder="blur"
-      priority={priority}
-      sizes="(min-width: 1152px) 1152px, 100vw"
-      className="h-auto w-full rounded-3xl ring-1 ring-white/10"
-    />
+    <ViewableMedia item={item} className="block w-full cursor-zoom-in">
+      <Image
+        src={srcOf(item)}
+        alt={alt}
+        width={item.meta.w}
+        height={item.meta.h}
+        blurDataURL={item.meta.blur}
+        placeholder="blur"
+        priority={priority}
+        sizes="(min-width: 1152px) 1152px, 100vw"
+        className="h-auto w-full rounded-3xl ring-1 ring-white/10"
+      />
+    </ViewableMedia>
   );
 }
 

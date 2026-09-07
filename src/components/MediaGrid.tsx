@@ -64,7 +64,7 @@ export default function MediaGrid({
 }) {
   const [count, setCount] = useState(() => Math.min(CHUNK_SIZE, media.length));
   const [selected, setSelected] = useState<{
-    item: MediaItemWithMeta;
+    index: number;
     origin: OriginRect;
   } | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -130,8 +130,11 @@ export default function MediaGrid({
               const animated = /\.gif$/i.test(item.src);
               const open = (e: ReactMouseEvent<HTMLButtonElement>) => {
                 const r = e.currentTarget.getBoundingClientRect();
+                // distribute() preserves full-array order, so index covers
+                // the whole gallery — navigation spans all media, not just
+                // the currently loaded chunk
                 setSelected({
-                  item,
+                  index,
                   origin: { left: r.left, top: r.top, width: r.width, height: r.height },
                 });
               };
@@ -192,7 +195,8 @@ export default function MediaGrid({
       {hasMore && <div ref={sentinelRef} aria-hidden className="h-px" />}
       {selected && (
         <MediaViewer
-          item={selected.item}
+          items={media}
+          index={selected.index}
           origin={selected.origin}
           onClose={() => setSelected(null)}
         />
