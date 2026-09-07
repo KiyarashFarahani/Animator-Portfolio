@@ -20,7 +20,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(sessionStorage.getItem("ma_splash_seen"))document.documentElement.classList.add("ma-splash-seen")}catch(e){}`,
+            __html: `try{if(sessionStorage.getItem("ma_splash_seen")){document.documentElement.classList.add("ma-splash-seen");document.documentElement.dataset.maSplash="done"}else{document.documentElement.dataset.maSplash="loading"}}catch(e){}`,
           }}
         />
       </head>

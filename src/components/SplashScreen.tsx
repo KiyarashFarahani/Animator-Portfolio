@@ -47,6 +47,7 @@ export default function SplashScreen({
 
     const originalOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = "hidden";
+    document.documentElement.dataset.maSplash = "loading";
     const t0 = Date.now();
 
     let finished = false;
@@ -59,10 +60,15 @@ export default function SplashScreen({
           document.documentElement.classList.add("ma-splash-seen");
         }
       } catch {}
+      document.documentElement.dataset.maSplash = "exiting";
+      window.dispatchEvent(new CustomEvent("ma:splash-exit"));
+      setExiting(true);
       window.setTimeout(() => {
         setVisible(false);
+        document.documentElement.dataset.maSplash = "done";
+        window.dispatchEvent(new CustomEvent("ma:splash-done"));
         document.documentElement.style.overflow = originalOverflow;
-      }, 650);
+      }, 850);
     };
 
     const scheduleFinish = (extraDelay = 0) => {
@@ -105,19 +111,31 @@ export default function SplashScreen({
       data-ma-splash
       aria-label="Loading"
       aria-live="polite"
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background px-6 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-        exiting ? "opacity-0 pointer-events-none" : "opacity-100"
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background px-6 will-change-transform ${
+        exiting ? "-translate-y-full" : "translate-y-0"
       }`}
+      style={{
+        transition: exiting
+          ? "transform 850ms cubic-bezier(0.76,0,0.24,1), border-radius 850ms cubic-bezier(0.76,0,0.24,1)"
+          : undefined,
+        borderRadius: exiting ? "0 0 48px 48px" : "0",
+      }}
     >
+      <div
+        className={`absolute inset-0 bg-background transition-transform duration-700 ease-out ${
+          exiting ? "scale-[0.98]" : "scale-100"
+        }`}
+      />
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-32 left-1/2 h-[520px] w-[720px] -translate-x-1/2 rounded-full bg-white/[0.04] blur-[80px]" />
         <div className="absolute -bottom-40 left-1/2 h-[480px] w-[680px] -translate-x-1/2 rounded-full bg-white/[0.025] blur-[70px]" />
       </div>
 
       <div
-        className={`relative flex flex-col items-center text-center transition-all duration-700 ${
-          exiting ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"
+        className={`relative flex flex-col items-center text-center will-change-transform ${
+          exiting ? "opacity-0 scale-[0.96] blur-[6px]" : "opacity-100 scale-100 blur-0"
         }`}
+        style={{ transition: "all 600ms cubic-bezier(0.22,1,0.36,1)" }}
       >
         <p className="text-[11px] font-semibold tracking-[0.28em] text-white/35 uppercase">Portfolio</p>
 
@@ -152,12 +170,24 @@ export default function SplashScreen({
       </div>
 
       <p
-        className={`absolute bottom-6 text-[10px] tracking-widest text-white/20 uppercase transition-opacity duration-500 ${
-          exiting ? "opacity-0" : "opacity-100"
-        }`}
+        className="absolute bottom-6 text-[10px] tracking-widest text-white/20 uppercase"
+        style={{
+          opacity: exiting ? 0 : 1,
+          transition: "opacity 400ms ease",
+        }}
       >
         masoud azad studio
       </p>
+
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/10"
+        style={{
+          opacity: exiting ? 0 : 1,
+          transform: exiting ? "scaleX(0.5)" : "scaleX(1)",
+          transition: "all 600ms ease",
+        }}
+      />
     </div>
   );
 }
