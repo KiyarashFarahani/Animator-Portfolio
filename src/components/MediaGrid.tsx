@@ -9,8 +9,6 @@ import MediaViewer, { type OriginRect } from "@/components/MediaViewer";
 const CHUNK_SIZE = 24;
 const SIZES = "(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 264px";
 
-// per-segment encoding: leaves "/" intact, escapes "&" and spaces that
-// encodeURI would keep raw and break the optimizer query string with
 function srcOf(item: MediaItemWithMeta): string {
   return `/${item.src.split("/").map(encodeURIComponent).join("/")}`;
 }
@@ -32,8 +30,6 @@ function useColumnCount(): number {
   return cols;
 }
 
-// shortest-column-first placement: deterministic and append-only, so tiles
-// already on screen keep their position when a new chunk is added
 function distribute(
   items: MediaItemWithMeta[],
   cols: number
@@ -121,10 +117,46 @@ function TileImg({
   );
 }
 
-function TileVideo({ src }: { src: string }) {
+function TileVideo({
+  src,
+  poster,
+  alt,
+  aspect,
+  meta,
+}: {
+  src: string;
+  poster?: string;
+  alt: string;
+  aspect?: string;
+  meta?: { w: number; h: number; blur: string };
+}) {
   const [loaded, setLoaded] = useState(false);
+  if (poster && meta) {
+    return (
+      <span className="relative block w-full overflow-hidden bg-white/5" style={aspect ? { aspectRatio: aspect } : undefined}>
+        {!loaded && <span aria-hidden className="skeleton skeleton-shimmer absolute inset-0" />}
+        <Image
+          src={srcOf({ src: poster, name: alt, kind: "image", meta } as MediaItemWithMeta)}
+          alt={alt}
+          width={meta.w}
+          height={meta.h}
+          sizes={SIZES}
+          blurDataURL={meta.blur}
+          placeholder={meta.blur ? "blur" : "empty"}
+          loading="lazy"
+          onLoad={() => setLoaded(true)}
+          className={`pointer-events-none w-full transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+        />
+        <span aria-hidden className="pointer-events-none absolute inset-0 m-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/55 ring-1 ring-white/25">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-white">
+            <path d="M6.5 4.5v11l9-5.5-9-5.5z" />
+          </svg>
+        </span>
+      </span>
+    );
+  }
   return (
-    <>
+    <span className={`relative block w-full overflow-hidden bg-white/5 ${aspect ? "" : "aspect-[4/3]"}`} style={aspect ? { aspectRatio: aspect } : undefined}>
       {!loaded && <span aria-hidden className="skeleton skeleton-shimmer absolute inset-0" />}
       <video
         src={src}
@@ -135,7 +167,12 @@ function TileVideo({ src }: { src: string }) {
         onCanPlay={() => setLoaded(true)}
         className={`pointer-events-none h-full w-full object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
       />
-    </>
+      <span aria-hidden className="pointer-events-none absolute inset-0 m-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/55 ring-1 ring-white/25">
+        <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-white">
+          <path d="M6.5 4.5v11l9-5.5-9-5.5z" />
+        </svg>
+      </span>
+    </span>
   );
 }
 
@@ -146,7 +183,6 @@ export default function MediaGrid({
 }: {
   media: MediaItemWithMeta[];
   priorityCount?: number;
-  /** cap column count — used when the grid sits in a narrow (e.g. split) column */
   maxCols?: number;
 }) {
   const [count, setCount] = useState(() => Math.min(CHUNK_SIZE, media.length));
@@ -157,8 +193,6 @@ export default function MediaGrid({
   const sentinelRef = useRef<HTMLDivElement>(null);
   const colCount = useColumnCount();
   const cols = Math.min(colCount, maxCols ?? 4);
-  // tile width follows the breakpoint's standard column count, so sparse
-  // galleries keep standard-size tiles and center instead of stretching
   const basis = maxCols ?? colCount;
   const hasMore = count < media.length;
 
@@ -167,9 +201,6 @@ export default function MediaGrid({
     [media, count, cols]
   );
 
-  // live thumbnail rect for a gallery item — lets the viewer minimize
-  // into the currently shown image after navigating (null when the
-  // tile isn't mounted, e.g. beyond the loaded chunk)
   const getOrigin = useCallback((item: MediaItemWithMeta): OriginRect | null => {
     const el = document.querySelector<HTMLElement>(
       `button[data-viewer-src="${CSS.escape(item.src)}"]`
@@ -186,7 +217,6 @@ export default function MediaGrid({
 
     let raf = 0;
     const maybeLoad = () => {
-      // geometric check (covers scroll-restoration jumps the observer can miss)
       if (sentinel.getBoundingClientRect().top < window.innerHeight + 2000) {
         setCount((c) => Math.min(c + CHUNK_SIZE, media.length));
       }
@@ -267,20 +297,7 @@ export default function MediaGrid({
                       className="skeleton skeleton-shimmer block aspect-[4/3] w-full"
                     />
                   ) : (
-                    <span
-                      className={`relative block w-full overflow-hidden bg-white/5 ${aspect ? "" : "aspect-video"}`}
-                      style={aspect ? { aspectRatio: aspect } : undefined}
-                    >
-                      <TileVideo src={srcOf(item)} />
-                      <span
-                        aria-hidden
-                        className="absolute inset-0 m-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/55 ring-1 ring-white/25"
-                      >
-                        <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-white">
-                          <path d="M6.5 4.5v11l9-5.5-9-5.5z" />
-                        </svg>
-                      </span>
-                    </span>
+                    <TileVideo src={srcOf(item)} poster={item.meta?.poster} alt={item.name} aspect={aspect} meta={item.meta} />
                   )}
                 </button>
               );

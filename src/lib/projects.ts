@@ -4,6 +4,7 @@ export interface Gallery {
   title: string;
   dir: string;
   pinned?: string[];
+  exclude?: string[];
 }
 
 export interface StoryBeat {
@@ -85,6 +86,10 @@ export const projects: Project[] = [
     title: "Short Movies",
     description: "Independent animated short films and exercises.",
     dir: "short movie",
-    thumbnail: "short movie/07.gif",
+    thumbnail: "short movie/mastoons/07.gif",
+    galleries: [
+      { title: "Commercial", dir: "short movie/commercial" },
+      { title: "Mastoons", dir: "short movie/mastoons", exclude: ["07.gif"] },
+    ],
   },
 ];

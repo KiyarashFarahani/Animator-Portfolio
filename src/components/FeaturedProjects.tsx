@@ -70,13 +70,23 @@ export default function FeaturedProjects({ covers }: FeaturedProjectsProps) {
               className="group relative flex-shrink-0 aspect-[16/10] w-[320px] sm:w-[400px] lg:w-[480px] rounded-2xl bg-neutral-900/50 ring-1 ring-white/10 overflow-hidden transition hover:ring-white/30 hover:bg-neutral-900"
             >
               {covers[i] ? (
-                <Image
-                  src={`/${covers[i]!.src}`}
-                  alt={project.title}
-                  fill
-                  sizes="(max-width: 640px) 80vw, 20vw"
-                  className="object-cover transition duration-300 group-hover:scale-[1.03]"
-                />
+                covers[i]!.kind === "video" ? (
+                  <video
+                    src={encodeURI(`/${covers[i]!.src}`)}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                  />
+                ) : (
+                  <Image
+                    src={`/${covers[i]!.src}`}
+                    alt={project.title}
+                    fill
+                    sizes="(max-width: 640px) 80vw, 20vw"
+                    className="object-cover transition duration-300 group-hover:scale-[1.03]"
+                  />
+                )
               ) : (
                 <div className="h-full w-full bg-neutral-800" />
               )}

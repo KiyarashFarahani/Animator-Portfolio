@@ -32,12 +32,17 @@ export default async function ProjectPage({
 
   const galleries = project.galleries
     ? await Promise.all(
-        project.galleries.map(async (gallery) => ({
-          ...gallery,
-          media: await attachMeta(
-            orderMedia(await collectMedia(gallery.dir), gallery.pinned)
-          ),
-        }))
+        project.galleries.map(async (gallery) => {
+          let items = await collectMedia(gallery.dir);
+          if (gallery.exclude?.length) {
+            const needles = gallery.exclude.map((e) => e.toLowerCase());
+            items = items.filter((it) => !needles.some((n) => it.src.toLowerCase().endsWith(n)));
+          }
+          return {
+            ...gallery,
+            media: await attachMeta(orderMedia(items, gallery.pinned)),
+          };
+        })
       )
     : null;
   const media = galleries

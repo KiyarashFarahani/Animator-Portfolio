@@ -11,8 +11,20 @@ export default async function ProjectsPage() {
       if (project.thumbnail) {
         return { src: project.thumbnail, name: project.thumbnail, kind: "image" as const };
       }
+      if (project.galleries?.length) {
+        for (const g of project.galleries) {
+          const media = await collectMedia(g.dir);
+          const img = media.find((item) => item.kind === "image");
+          if (img) return img;
+        }
+        for (const g of project.galleries) {
+          const media = await collectMedia(g.dir);
+          if (media[0]) return media[0];
+        }
+        return null;
+      }
       const media = await collectMedia(project.dir);
-      return media.find((item) => item.kind === "image");
+      return media.find((item) => item.kind === "image") ?? media[0] ?? null;
     })
   );
 
@@ -32,12 +44,22 @@ export default async function ProjectsPage() {
               className="group overflow-hidden rounded-3xl bg-neutral-900 ring-1 ring-white/10 transition hover:ring-white/30"
             >
               {covers[i] ? (
-                <img
-                  src={encodeURI(`/${covers[i]!.src}`)}
-                  alt={project.title}
-                  loading="lazy"
-                  className="aspect-[16/10] w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                />
+                covers[i]!.kind === "video" ? (
+                  <video
+                    src={encodeURI(`/${covers[i]!.src}`)}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    className="aspect-[16/10] w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                  />
+                ) : (
+                  <img
+                    src={encodeURI(`/${covers[i]!.src}`)}
+                    alt={project.title}
+                    loading="lazy"
+                    className="aspect-[16/10] w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                  />
+                )
               ) : (
                 <div className="aspect-[16/10] w-full bg-neutral-800" />
               )}

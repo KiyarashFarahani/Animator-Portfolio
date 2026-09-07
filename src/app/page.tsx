@@ -11,8 +11,20 @@ async function getProjectCovers() {
       if (project.thumbnail) {
         return { src: project.thumbnail, name: project.thumbnail, kind: "image" as const };
       }
+      if (project.galleries?.length) {
+        for (const g of project.galleries) {
+          const media = await collectMedia(g.dir);
+          const img = media.find((item) => item.kind === "image");
+          if (img) return img;
+        }
+        for (const g of project.galleries) {
+          const media = await collectMedia(g.dir);
+          if (media[0]) return media[0];
+        }
+        return null;
+      }
       const media = await collectMedia(project.dir);
-      return media.find((item) => item.kind === "image") ?? null;
+      return media.find((item) => item.kind === "image") ?? media[0] ?? null;
     })
   );
   return covers;
