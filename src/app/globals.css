@@ -37,6 +37,10 @@ body {
   display: none;
 }
 
+html.ma-splash-seen [data-ma-splash] {
+  display: none !important;
+}
+
 /* skip layout/paint of offscreen gallery tiles */
 .tile {
   content-visibility: auto;

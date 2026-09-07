@@ -4,6 +4,7 @@ import { projects } from "@/lib/projects";
 import { collectMedia } from "@/lib/projects-server";
 import FeaturedProjects from "@/components/FeaturedProjects";
 import AboutSection from "@/components/AboutSection";
+import SplashScreen from "@/components/SplashScreen";
 
 async function getProjectCovers() {
   const covers = await Promise.all(
@@ -20,8 +21,16 @@ async function getProjectCovers() {
 
 export default async function Home() {
   const covers = await getProjectCovers();
+  const splashAssets = [
+    "/Hero/dusha_02_bg.png",
+    "/Hero/animation.gif",
+    "/About/profile.webp",
+    ...covers.filter((c): c is NonNullable<typeof c> => c !== null).map((c) => `/${c.src}`),
+  ];
   return (
-    <main className="min-h-screen w-full">
+    <>
+      <SplashScreen assets={splashAssets} maxDuration={2500} />
+      <main className="min-h-screen w-full">
       <section className="relative min-h-screen w-full overflow-hidden">
         <Image
           src="/Hero/dusha_02_bg.png"
@@ -71,8 +80,9 @@ export default async function Home() {
         </div>
       </section>
 
-<FeaturedProjects covers={covers} />
-       <AboutSection variant="full" />
-    </main>
+        <FeaturedProjects covers={covers} />
+        <AboutSection variant="full" />
+      </main>
+    </>
   );
 }
