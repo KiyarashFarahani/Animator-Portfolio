@@ -1,9 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import Image from "next/image";
 import type { MediaItemWithMeta } from "@/lib/media-manifest";
+import MediaViewer, { type OriginRect } from "@/components/MediaViewer";
 
 const CHUNK_SIZE = 24;
 const SIZES = "(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 264px";
@@ -62,6 +63,10 @@ export default function MediaGrid({
   maxCols?: number;
 }) {
   const [count, setCount] = useState(() => Math.min(CHUNK_SIZE, media.length));
+  const [selected, setSelected] = useState<{
+    item: MediaItemWithMeta;
+    origin: OriginRect;
+  } | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const colCount = useColumnCount();
   const cols = Math.min(colCount, maxCols ?? 4);
@@ -120,49 +125,78 @@ export default function MediaGrid({
             >
             {column.map(({ item, index }) => {
               const priority = index < priorityCount && item.kind === "image";
-              if (item.kind === "image" && item.meta) {
-                return (
-                  <Image
-                    key={item.src}
-                    src={srcOf(item)}
-                    alt={item.name}
-                    width={item.meta.w}
-                    height={item.meta.h}
-                    sizes={SIZES}
-                    blurDataURL={item.meta.blur}
-                    placeholder="blur"
-                    priority={priority}
-                    loading={priority ? undefined : "lazy"}
-                    className="tile w-full rounded-2xl ring-1 ring-white/10"
-                  />
-                );
-              }
-              if (item.kind === "image") {
-                return (
-                  <img
-                    key={item.src}
-                    src={srcOf(item)}
-                    alt={item.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="tile w-full rounded-2xl ring-1 ring-white/10"
-                  />
-                );
-              }
+              // GIFs stay on plain <img>: preserves animation and shares the
+              // exact cached URL with the viewer, so first open never flashes
+              const animated = /\.gif$/i.test(item.src);
+              const open = (e: ReactMouseEvent<HTMLButtonElement>) => {
+                const r = e.currentTarget.getBoundingClientRect();
+                setSelected({
+                  item,
+                  origin: { left: r.left, top: r.top, width: r.width, height: r.height },
+                });
+              };
               return (
-                <video
+                <button
                   key={item.src}
-                  src={srcOf(item)}
-                  controls
-                  preload="metadata"
-                  className="tile aspect-video w-full rounded-2xl bg-white/5 ring-1 ring-white/10"
-                />
+                  type="button"
+                  onClick={open}
+                  aria-label={`View ${item.name}`}
+                  className="tile block w-full cursor-zoom-in overflow-hidden rounded-2xl ring-1 ring-white/10 transition hover:ring-white/30 focus-visible:outline-2 focus-visible:outline-white/60"
+                >
+                  {item.kind === "image" && item.meta && !animated ? (
+                    <Image
+                      src={srcOf(item)}
+                      alt={item.name}
+                      width={item.meta.w}
+                      height={item.meta.h}
+                      sizes={SIZES}
+                      blurDataURL={item.meta.blur}
+                      placeholder="blur"
+                      priority={priority}
+                      loading={priority ? undefined : "lazy"}
+                      className="pointer-events-none w-full"
+                    />
+                  ) : item.kind === "image" ? (
+                    <img
+                      src={srcOf(item)}
+                      alt={item.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="pointer-events-none w-full"
+                    />
+                  ) : (
+                    <span className="relative block aspect-video w-full bg-white/5">
+                      <video
+                        src={srcOf(item)}
+                        muted
+                        playsInline
+                        preload="metadata"
+                        className="pointer-events-none h-full w-full object-cover"
+                      />
+                      <span
+                        aria-hidden
+                        className="absolute inset-0 m-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/55 ring-1 ring-white/25"
+                      >
+                        <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-white">
+                          <path d="M6.5 4.5v11l9-5.5-9-5.5z" />
+                        </svg>
+                      </span>
+                    </span>
+                  )}
+                </button>
               );
             })}
           </div>
         ))}
       </div>
       {hasMore && <div ref={sentinelRef} aria-hidden className="h-px" />}
+      {selected && (
+        <MediaViewer
+          item={selected.item}
+          origin={selected.origin}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </>
   );
 }
