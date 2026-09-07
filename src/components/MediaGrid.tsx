@@ -52,6 +52,93 @@ function distribute(
   return columns;
 }
 
+function TileImage({
+  src,
+  alt,
+  width,
+  height,
+  aspect,
+  sizes,
+  blur,
+  priority,
+}: {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  aspect?: string;
+  sizes: string;
+  blur: string;
+  priority: boolean;
+}) {
+  const [loaded, setLoaded] = useState(priority);
+  return (
+    <span className="relative block w-full overflow-hidden" style={aspect ? { aspectRatio: aspect } : undefined}>
+      {!loaded && <span aria-hidden className="skeleton skeleton-shimmer absolute inset-0" />}
+      <Image
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        sizes={sizes}
+        blurDataURL={blur}
+        placeholder="blur"
+        priority={priority}
+        loading={priority ? undefined : "lazy"}
+        onLoad={() => setLoaded(true)}
+        className={`pointer-events-none w-full transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+      />
+    </span>
+  );
+}
+
+function TileImg({
+  src,
+  alt,
+  aspect,
+  meta,
+}: {
+  src: string;
+  alt: string;
+  aspect?: string;
+  meta: { w: number; h: number };
+}) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <span className="relative block w-full overflow-hidden" style={aspect ? { aspectRatio: aspect } : undefined}>
+      {!loaded && <span aria-hidden className="skeleton skeleton-shimmer absolute inset-0" />}
+      <img
+        src={src}
+        alt={alt}
+        width={meta.w}
+        height={meta.h}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        className={`pointer-events-none w-full transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+      />
+    </span>
+  );
+}
+
+function TileVideo({ src }: { src: string }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <>
+      {!loaded && <span aria-hidden className="skeleton skeleton-shimmer absolute inset-0" />}
+      <video
+        src={src}
+        muted
+        playsInline
+        preload="metadata"
+        onLoadedData={() => setLoaded(true)}
+        onCanPlay={() => setLoaded(true)}
+        className={`pointer-events-none h-full w-full object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+      />
+    </>
+  );
+}
+
 export default function MediaGrid({
   media,
   priorityCount = 0,
@@ -138,14 +225,10 @@ export default function MediaGrid({
             >
             {column.map(({ item, index }) => {
               const priority = index < priorityCount && item.kind === "image";
-              // GIFs stay on plain <img>: preserves animation and shares the
-              // exact cached URL with the viewer, so first open never flashes
               const animated = /\.gif$/i.test(item.src);
+              const aspect = item.meta ? `${item.meta.w}/${item.meta.h}` : undefined;
               const open = (e: ReactMouseEvent<HTMLButtonElement>) => {
                 const r = e.currentTarget.getBoundingClientRect();
-                // distribute() preserves full-array order, so index covers
-                // the whole gallery — navigation spans all media, not just
-                // the currently loaded chunk
                 setSelected({
                   index,
                   origin: { left: r.left, top: r.top, width: r.width, height: r.height },
@@ -161,35 +244,34 @@ export default function MediaGrid({
                   className="tile block w-full cursor-zoom-in overflow-hidden rounded-2xl ring-1 ring-white/10 transition hover:ring-white/30 focus-visible:outline-2 focus-visible:outline-white/60"
                 >
                   {item.kind === "image" && item.meta && !animated ? (
-                    <Image
+                    <TileImage
                       src={srcOf(item)}
                       alt={item.name}
                       width={item.meta.w}
                       height={item.meta.h}
+                      aspect={aspect}
                       sizes={SIZES}
-                      blurDataURL={item.meta.blur}
-                      placeholder="blur"
+                      blur={item.meta.blur}
                       priority={priority}
-                      loading={priority ? undefined : "lazy"}
-                      className="pointer-events-none w-full"
                     />
-                  ) : item.kind === "image" ? (
-                    <img
+                  ) : item.kind === "image" && item.meta ? (
+                    <TileImg
                       src={srcOf(item)}
                       alt={item.name}
-                      loading="lazy"
-                      decoding="async"
-                      className="pointer-events-none w-full"
+                      aspect={aspect}
+                      meta={item.meta}
+                    />
+                  ) : item.kind === "image" ? (
+                    <span
+                      aria-hidden
+                      className="skeleton skeleton-shimmer block aspect-[4/3] w-full"
                     />
                   ) : (
-                    <span className="relative block aspect-video w-full bg-white/5">
-                      <video
-                        src={srcOf(item)}
-                        muted
-                        playsInline
-                        preload="metadata"
-                        className="pointer-events-none h-full w-full object-cover"
-                      />
+                    <span
+                      className={`relative block w-full overflow-hidden bg-white/5 ${aspect ? "" : "aspect-video"}`}
+                      style={aspect ? { aspectRatio: aspect } : undefined}
+                    >
+                      <TileVideo src={srcOf(item)} />
                       <span
                         aria-hidden
                         className="absolute inset-0 m-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/55 ring-1 ring-white/25"
