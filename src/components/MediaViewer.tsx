@@ -9,7 +9,6 @@ import {
   useState,
   useSyncExternalStore,
   type TouchEvent as ReactTouchEvent,
-  type WheelEvent as ReactWheelEvent,
 } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
@@ -53,6 +52,7 @@ export default function MediaViewer({
   items,
   index,
   origin,
+  getOrigin,
   onClose,
 }: {
   /** full navigable list (gallery, beat images, …) */
@@ -60,6 +60,10 @@ export default function MediaViewer({
   /** index of the initially opened item */
   index: number;
   origin: OriginRect;
+  /** live thumbnail rect of an item — used so closing minimizes into the
+   * currently shown image, not the first one opened. Return null when the
+   * thumbnail isn't in the DOM (e.g. not yet loaded). */
+  getOrigin?: (item: MediaItemWithMeta) => OriginRect | null;
   onClose: () => void;
 }) {
   // portal target exists only on the client — avoids SSR mismatch and
@@ -77,7 +81,6 @@ export default function MediaViewer({
   const openedRef = useRef(false);
   const enteredRef = useRef(false);
   const closingRef = useRef(false);
-  const lastNavRef = useRef(0);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
 
   const backdropRef = useRef<HTMLDivElement>(null);
@@ -127,17 +130,31 @@ export default function MediaViewer({
       duration: 0.4,
       ease: "power2.inOut",
     });
-    gsap.to(tileRef.current, {
-      left: origin.left,
-      top: origin.top,
-      width: origin.width,
-      height: origin.height,
-      borderRadius: 16,
-      duration: 0.4,
-      ease: "power3.inOut",
-      onComplete: onClose,
-    });
-  }, [origin, onClose]);
+    // minimize into the currently shown image's thumbnail; if that
+    // thumbnail isn't mounted, fade out in place instead of flying to a
+    // stale rect
+    const live = getOrigin?.(items[currentRef.current]);
+    if (live) {
+      gsap.to(tileRef.current, {
+        left: live.left,
+        top: live.top,
+        width: live.width,
+        height: live.height,
+        borderRadius: 16,
+        duration: 0.4,
+        ease: "power3.inOut",
+        onComplete: onClose,
+      });
+    } else {
+      gsap.to(tileRef.current, {
+        opacity: 0,
+        scale: 0.97,
+        duration: 0.3,
+        ease: "power2.in",
+        onComplete: onClose,
+      });
+    }
+  }, [getOrigin, items, onClose]);
 
   // keys: Escape closes, arrows navigate
   useEffect(() => {
@@ -221,18 +238,8 @@ export default function MediaViewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current]);
 
-  // scroll to slide: dominant wheel axis, debounced so one gesture = one step
-  const onWheel = (e: ReactWheelEvent) => {
-    if (count < 2) return;
-    const now = Date.now();
-    if (now - lastNavRef.current < 800) return;
-    const ax = Math.abs(e.deltaX);
-    const ay = Math.abs(e.deltaY);
-    if (Math.max(ax, ay) < 20) return;
-    lastNavRef.current = now;
-    go(ax > ay ? (e.deltaX > 0 ? 1 : -1) : e.deltaY > 0 ? 1 : -1);
-  };
-
+  // touch swipe (mobile) to slide between items — desktop wheel
+  // intentionally does nothing so scrolling never flips images
   const onTouchStart = (e: ReactTouchEvent) => {
     const t = e.touches[0];
     touchRef.current = { x: t.clientX, y: t.clientY };
@@ -262,7 +269,6 @@ export default function MediaViewer({
 
   return createPortal(
     <div
-      onWheel={onWheel}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       className="fixed inset-0 z-[100]"

@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import Image from "next/image";
 import type { MediaItemWithMeta } from "@/lib/media-manifest";
 import MediaViewer, { type OriginRect } from "@/components/MediaViewer";
@@ -80,6 +80,19 @@ export default function MediaGrid({
     [media, count, cols]
   );
 
+  // live thumbnail rect for a gallery item — lets the viewer minimize
+  // into the currently shown image after navigating (null when the
+  // tile isn't mounted, e.g. beyond the loaded chunk)
+  const getOrigin = useCallback((item: MediaItemWithMeta): OriginRect | null => {
+    const el = document.querySelector<HTMLElement>(
+      `button[data-viewer-src="${CSS.escape(item.src)}"]`
+    );
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0) return null;
+    return { left: r.left, top: r.top, width: r.width, height: r.height };
+  }, []);
+
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!hasMore || !sentinel) return;
@@ -144,6 +157,7 @@ export default function MediaGrid({
                   type="button"
                   onClick={open}
                   aria-label={`View ${item.name}`}
+                  data-viewer-src={item.src}
                   className="tile block w-full cursor-zoom-in overflow-hidden rounded-2xl ring-1 ring-white/10 transition hover:ring-white/30 focus-visible:outline-2 focus-visible:outline-white/60"
                 >
                   {item.kind === "image" && item.meta && !animated ? (
@@ -198,6 +212,7 @@ export default function MediaGrid({
           items={media}
           index={selected.index}
           origin={selected.origin}
+          getOrigin={getOrigin}
           onClose={() => setSelected(null)}
         />
       )}

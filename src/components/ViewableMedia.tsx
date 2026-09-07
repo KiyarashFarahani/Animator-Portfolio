@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import { useCallback, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import MediaViewer, { type OriginRect } from "@/components/MediaViewer";
 import type { MediaItemWithMeta } from "@/lib/media-manifest";
 
@@ -28,6 +28,16 @@ export default function ViewableMedia({
     list.findIndex((m) => m.src === item.src)
   );
 
+  const getOrigin = useCallback((m: MediaItemWithMeta): OriginRect | null => {
+    const el = document.querySelector<HTMLElement>(
+      `div[data-viewer-src="${CSS.escape(m.src)}"]`
+    );
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0) return null;
+    return { left: r.left, top: r.top, width: r.width, height: r.height };
+  }, []);
+
   const open = (e: ReactMouseEvent<HTMLDivElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
     setOrigin({ left: r.left, top: r.top, width: r.width, height: r.height });
@@ -46,6 +56,7 @@ export default function ViewableMedia({
         role="button"
         tabIndex={0}
         aria-label={`View ${item.name}`}
+        data-viewer-src={item.src}
         onClick={open}
         onKeyDown={onKey}
         className={`${className} focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/60`}
@@ -57,6 +68,7 @@ export default function ViewableMedia({
           items={list}
           index={start}
           origin={origin}
+          getOrigin={getOrigin}
           onClose={() => setOrigin(null)}
         />
       )}
