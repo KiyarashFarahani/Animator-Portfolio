@@ -98,12 +98,14 @@ function TileImg({
   alt,
   aspect,
   meta,
+  priority = false,
   fitSquare,
 }: {
   src: string;
   alt: string;
   aspect?: string;
   meta: { w: number; h: number };
+  priority?: boolean;
   fitSquare?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
@@ -118,7 +120,8 @@ function TileImg({
         alt={alt}
         width={meta.w}
         height={meta.h}
-        loading="lazy"
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
         decoding="async"
         onLoad={() => setLoaded(true)}
         className={`pointer-events-none transition-opacity duration-500 ${fitSquare ? "h-full w-full object-contain" : "w-full"} ${loaded ? "opacity-100" : "opacity-0"}`}
@@ -154,6 +157,7 @@ function TileVideo({
   alt,
   aspect,
   meta,
+  priority = false,
   fitSquare,
 }: {
   src: string;
@@ -161,9 +165,10 @@ function TileVideo({
   alt: string;
   aspect?: string;
   meta?: { w: number; h: number; blur: string };
+  priority?: boolean;
   fitSquare?: boolean;
 }) {
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(priority);
   if (poster && meta) {
     return (
       <span
@@ -179,7 +184,8 @@ function TileVideo({
           sizes={SIZES}
           blurDataURL={meta.blur}
           placeholder={meta.blur ? "blur" : "empty"}
-          loading="lazy"
+          priority={priority}
+          loading={priority ? undefined : "lazy"}
           onLoad={() => setLoaded(true)}
           className={`pointer-events-none transition-opacity duration-500 ${fitSquare ? "h-full w-full object-contain" : "w-full"} ${loaded ? "opacity-100" : "opacity-0"}`}
         />
@@ -300,7 +306,7 @@ export default function MediaGrid({
               className="flex min-w-0 flex-col gap-4"
             >
             {column.map(({ item, index }) => {
-              const priority = index < priorityCount && item.kind === "image";
+              const priority = index < priorityCount;
               const animated = /\.gif$/i.test(item.src);
               const loopVideo = item.kind === "video" && item.src.startsWith("Animate/");
               const aspect = item.meta ? `${item.meta.w}/${item.meta.h}` : undefined;
@@ -333,7 +339,7 @@ export default function MediaGrid({
                       fitSquare={fitSquare}
                     />
                   ) : item.kind === "image" && item.meta ? (
-                    <TileImg src={srcOf(item)} alt={item.name} aspect={aspect} meta={item.meta} fitSquare={fitSquare} />
+                    <TileImg src={srcOf(item)} alt={item.name} aspect={aspect} meta={item.meta} priority={priority} fitSquare={fitSquare} />
                   ) : item.kind === "image" ? (
                     <span
                       aria-hidden
@@ -342,7 +348,7 @@ export default function MediaGrid({
                   ) : loopVideo ? (
                     <TileLoopVideo src={srcOf(item)} aspect={aspect} fitSquare={fitSquare} />
                   ) : (
-                    <TileVideo src={srcOf(item)} poster={item.meta?.poster} alt={item.name} aspect={aspect} meta={item.meta} fitSquare={fitSquare} />
+                    <TileVideo src={srcOf(item)} poster={item.meta?.poster} alt={item.name} aspect={aspect} meta={item.meta} priority={priority} fitSquare={fitSquare} />
                   )}
                 </button>
               );
