@@ -116,8 +116,7 @@ function SplitImage({ item }: { item: MediaItemWithMeta }) {
       blurDataURL={item.meta.blur}
       placeholder="blur"
       sizes={`${dims.w}px`}
-      style={{ height: dims.h }}
-      className="w-auto max-w-full rounded-2xl ring-1 ring-white/10"
+      className="h-auto w-auto max-w-full rounded-2xl ring-1 ring-white/10"
     />
   );
 }
