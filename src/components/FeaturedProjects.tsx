@@ -97,12 +97,19 @@ export default function FeaturedProjects({ covers }: FeaturedProjectsProps) {
                     preload="metadata"
                     className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
                   />
+                ) : /\.gif$/i.test(covers[i]!.src) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={encodeURI(`/${covers[i]!.src}`)}
+                    alt={project.title}
+                    className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                  />
                 ) : (
                   <Image
                     src={`/${covers[i]!.src}`}
                     alt={project.title}
                     fill
-                    sizes="(max-width: 640px) 80vw, 20vw"
+                    sizes="(max-width: 640px) 320px, (max-width: 1024px) 400px, 480px"
                     className="object-cover transition duration-300 group-hover:scale-[1.03]"
                   />
                 )
