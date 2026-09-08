@@ -157,6 +157,7 @@ export const skySwampStory: StoryChapter[] = [
       {
         images: ["image55.jpg", "image26.jpg", "image44.jpg", "image104.jpg"],
         layout: "masonry",
+        fitSquare: true,
       },
       {
         paragraphs: [
@@ -199,6 +200,7 @@ export const skySwampStory: StoryChapter[] = [
         ],
         images: ["image97.jpg", "image52.jpg", "image113.jpg", "image34.jpg"],
         layout: "masonry",
+        fitSquare: true,
       },
       {
         subheading: "The Secret Garden",
@@ -236,6 +238,7 @@ export const skySwampStory: StoryChapter[] = [
       {
         images: ["image10.jpg", "image102.jpg"],
         layout: "masonry",
+        fitSquare: true,
       },
     ],
   },
@@ -333,6 +336,7 @@ export const skySwampStory: StoryChapter[] = [
       {
         images: ["image28.jpg", "image83.jpg", "image11.jpg", "image14.jpg", "image78.jpg", "image69.jpg", "image119.jpg", "image99.jpg"],
         layout: "masonry",
+        fitSquare: true,
       },
     ],
   },

@@ -17,6 +17,7 @@ export interface StoryBeat {
   side?: "left" | "right";
   /** image grid columns inside a split (1 = stacked, 2 = side by side) */
   cols?: 1 | 2;
+  fitSquare?: boolean;
 }
 
 export interface StoryChapter {

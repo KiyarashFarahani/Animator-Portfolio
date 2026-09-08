@@ -57,6 +57,7 @@ function TileImage({
   sizes,
   blur,
   priority,
+  fitSquare,
 }: {
   src: string;
   alt: string;
@@ -66,10 +67,14 @@ function TileImage({
   sizes: string;
   blur: string;
   priority: boolean;
+  fitSquare?: boolean;
 }) {
   const [loaded, setLoaded] = useState(priority);
   return (
-    <span className="relative block w-full overflow-hidden" style={aspect ? { aspectRatio: aspect } : undefined}>
+    <span
+      className={`relative block w-full overflow-hidden ${fitSquare ? "bg-white" : ""}`}
+      style={{ aspectRatio: fitSquare ? "1/1" : aspect }}
+    >
       {!loaded && <span aria-hidden className="skeleton skeleton-shimmer absolute inset-0" />}
       <Image
         src={src}
@@ -82,7 +87,7 @@ function TileImage({
         priority={priority}
         loading={priority ? undefined : "lazy"}
         onLoad={() => setLoaded(true)}
-        className={`pointer-events-none w-full transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+        className={`pointer-events-none transition-opacity duration-500 ${fitSquare ? "h-full w-full object-contain" : "w-full"} ${loaded ? "opacity-100" : "opacity-0"}`}
       />
     </span>
   );
@@ -93,15 +98,20 @@ function TileImg({
   alt,
   aspect,
   meta,
+  fitSquare,
 }: {
   src: string;
   alt: string;
   aspect?: string;
   meta: { w: number; h: number };
+  fitSquare?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
   return (
-    <span className="relative block w-full overflow-hidden" style={aspect ? { aspectRatio: aspect } : undefined}>
+    <span
+      className={`relative block w-full overflow-hidden ${fitSquare ? "bg-white" : ""}`}
+      style={{ aspectRatio: fitSquare ? "1/1" : aspect }}
+    >
       {!loaded && <span aria-hidden className="skeleton skeleton-shimmer absolute inset-0" />}
       <img
         src={src}
@@ -111,7 +121,7 @@ function TileImg({
         loading="lazy"
         decoding="async"
         onLoad={() => setLoaded(true)}
-        className={`pointer-events-none w-full transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+        className={`pointer-events-none transition-opacity duration-500 ${fitSquare ? "h-full w-full object-contain" : "w-full"} ${loaded ? "opacity-100" : "opacity-0"}`}
       />
     </span>
   );
@@ -123,17 +133,22 @@ function TileVideo({
   alt,
   aspect,
   meta,
+  fitSquare,
 }: {
   src: string;
   poster?: string;
   alt: string;
   aspect?: string;
   meta?: { w: number; h: number; blur: string };
+  fitSquare?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
   if (poster && meta) {
     return (
-      <span className="relative block w-full overflow-hidden bg-white/5" style={aspect ? { aspectRatio: aspect } : undefined}>
+      <span
+        className={`relative block w-full overflow-hidden ${fitSquare ? "bg-white" : "bg-white/5"}`}
+        style={{ aspectRatio: fitSquare ? "1/1" : aspect }}
+      >
         {!loaded && <span aria-hidden className="skeleton skeleton-shimmer absolute inset-0" />}
         <Image
           src={srcOf({ src: poster, name: alt, kind: "image", meta } as MediaItemWithMeta)}
@@ -145,7 +160,7 @@ function TileVideo({
           placeholder={meta.blur ? "blur" : "empty"}
           loading="lazy"
           onLoad={() => setLoaded(true)}
-          className={`pointer-events-none w-full transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+          className={`pointer-events-none transition-opacity duration-500 ${fitSquare ? "h-full w-full object-contain" : "w-full"} ${loaded ? "opacity-100" : "opacity-0"}`}
         />
         <span aria-hidden className="pointer-events-none absolute inset-0 m-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/55 ring-1 ring-white/25">
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-white">
@@ -156,7 +171,10 @@ function TileVideo({
     );
   }
   return (
-    <span className={`relative block w-full overflow-hidden bg-white/5 ${aspect ? "" : "aspect-[4/3]"}`} style={aspect ? { aspectRatio: aspect } : undefined}>
+    <span
+      className={`relative block w-full overflow-hidden ${fitSquare ? "bg-white" : "bg-white/5"} ${!aspect && !fitSquare ? "aspect-[4/3]" : ""}`}
+      style={{ aspectRatio: fitSquare ? "1/1" : aspect }}
+    >
       {!loaded && <span aria-hidden className="skeleton skeleton-shimmer absolute inset-0" />}
       <video
         src={src}
@@ -165,7 +183,7 @@ function TileVideo({
         preload="metadata"
         onLoadedData={() => setLoaded(true)}
         onCanPlay={() => setLoaded(true)}
-        className={`pointer-events-none h-full w-full object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+        className={`pointer-events-none h-full w-full transition-opacity duration-500 ${fitSquare ? "object-contain" : "object-cover"} ${loaded ? "opacity-100" : "opacity-0"}`}
       />
       <span aria-hidden className="pointer-events-none absolute inset-0 m-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/55 ring-1 ring-white/25">
         <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-white">
@@ -180,10 +198,12 @@ export default function MediaGrid({
   media,
   priorityCount = 0,
   maxCols,
+  fitSquare,
 }: {
   media: MediaItemWithMeta[];
   priorityCount?: number;
   maxCols?: number;
+  fitSquare?: boolean;
 }) {
   const [count, setCount] = useState(() => Math.min(CHUNK_SIZE, media.length));
   const [selected, setSelected] = useState<{
@@ -196,10 +216,15 @@ export default function MediaGrid({
   const basis = maxCols ?? colCount;
   const hasMore = count < media.length;
 
-  const columns = useMemo(
-    () => distribute(media.slice(0, count), cols),
-    [media, count, cols]
-  );
+  const columns = useMemo(() => {
+    if (fitSquare) {
+      const n = media.slice(0, count).map((item, index) => ({ item, index }));
+      const out: { item: MediaItemWithMeta; index: number }[][] = Array.from({ length: cols }, () => []);
+      n.forEach((entry, i) => out[i % cols].push(entry));
+      return out;
+    }
+    return distribute(media.slice(0, count), cols);
+  }, [media, count, cols, fitSquare]);
 
   const getOrigin = useCallback((item: MediaItemWithMeta): OriginRect | null => {
     const el = document.querySelector<HTMLElement>(
@@ -283,21 +308,17 @@ export default function MediaGrid({
                       sizes={SIZES}
                       blur={item.meta.blur}
                       priority={priority}
+                      fitSquare={fitSquare}
                     />
                   ) : item.kind === "image" && item.meta ? (
-                    <TileImg
-                      src={srcOf(item)}
-                      alt={item.name}
-                      aspect={aspect}
-                      meta={item.meta}
-                    />
+                    <TileImg src={srcOf(item)} alt={item.name} aspect={aspect} meta={item.meta} fitSquare={fitSquare} />
                   ) : item.kind === "image" ? (
                     <span
                       aria-hidden
-                      className="skeleton skeleton-shimmer block aspect-[4/3] w-full"
+                      className={`block w-full ${fitSquare ? "aspect-square bg-white" : "skeleton skeleton-shimmer aspect-[4/3]"}`}
                     />
                   ) : (
-                    <TileVideo src={srcOf(item)} poster={item.meta?.poster} alt={item.name} aspect={aspect} meta={item.meta} />
+                    <TileVideo src={srcOf(item)} poster={item.meta?.poster} alt={item.name} aspect={aspect} meta={item.meta} fitSquare={fitSquare} />
                   )}
                 </button>
               );

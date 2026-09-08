@@ -350,7 +350,7 @@ function Beat({
         </div>
       )}
       {items.length > 0 && layout === "masonry" && (
-        <MediaGrid media={items} priorityCount={priority ? 2 : 0} />
+        <MediaGrid media={items} priorityCount={priority ? 2 : 0} fitSquare={beat.fitSquare} />
       )}
     </div>
   );
