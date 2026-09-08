@@ -116,17 +116,19 @@ export default function PageTransition({ children }: { children: React.ReactNode
 
     const ctx = gsap.context(() => {
       const finish = () => {
-        gsap.set([root, ...kids], { clearProps: "transform" });
+        gsap.set([root, ...kids], { clearProps: "transform,opacity,visibility" });
+        gsap.set(root, { autoAlpha: 1 });
+        if (kids.length) gsap.set(kids, { autoAlpha: 1 });
         requestAnimationFrame(() => {
           window.dispatchEvent(new CustomEvent("ma:page-transition-done"));
           ScrollTrigger.refresh();
         });
       };
       if (wasCovering) {
-        gsap.set(root, { autoAlpha: 0, y: 8 });
+        gsap.set(root, { autoAlpha: 1, y: 0 });
         if (kids.length) gsap.set(kids, { y: 18, autoAlpha: 0 });
+        else gsap.set(root, { y: 18, autoAlpha: 0 });
         window.scrollTo(0, 0);
-        gsap.set(root, { autoAlpha: 1 });
         const tl = gsap.timeline({
           defaults: { overwrite: true },
           onComplete: () => {
@@ -141,13 +143,13 @@ export default function PageTransition({ children }: { children: React.ReactNode
       }
 
       gsap.set(overlay, { yPercent: -101, borderRadius: "0 0 48px 48px" });
-      gsap.set(root, { autoAlpha: 0, y: 8 });
+      gsap.set(root, { autoAlpha: 1, y: 0 });
       if (kids.length) gsap.set(kids, { y: 18, autoAlpha: 0 });
+      else gsap.set(root, { y: 18, autoAlpha: 0 });
 
       const tl = gsap.timeline({ defaults: { overwrite: true }, onComplete: finish });
       tl.to(overlay, { yPercent: 0, duration: 0.45, ease: EASE_COVER });
       tl.add(() => window.scrollTo(0, 0));
-      tl.set(root, { autoAlpha: 1 });
       if (kids.length) tl.to(kids, { y: 0, autoAlpha: 1, duration: 0.5, stagger: 0.07, ease: EASE_REVEAL }, "<0.08");
       else tl.to(root, { y: 0, autoAlpha: 1, duration: 0.5, ease: EASE_REVEAL }, "<0.08");
       tl.to(overlay, { yPercent: -101, duration: 0.62, ease: EASE_EXIT as unknown as string }, "<0.12");
