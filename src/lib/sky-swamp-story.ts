@@ -147,38 +147,29 @@ export const skySwampStory: StoryChapter[] = [
         paragraphs: [
           "Sapi is the spirit of Earth. Before the meteor struck, he separated himself from the planet and created a small, simplified version of Earth to carry with him.",
           "He keeps it inside the cardboard box attached to his body, protecting the history of the world as he remembers it.",
+          "When the meteor hit, Sapi survived—but not without a permanent mark. A large hollow was left in the center of his face, which he keeps hidden behind a wooden mask.",
+          "He doesn't want to accept what happened to Earth, or let anyone see what was left behind.",
         ],
         images: ["image63.jpg"],
         layout: "split",
         side: "left",
       },
       {
-        images: ["image55.jpg", "image26.jpg", "image44.jpg"],
+        images: ["image55.jpg", "image26.jpg", "image44.jpg", "image104.jpg"],
         layout: "masonry",
-      },
-      {
-        paragraphs: [
-          "When the meteor hit, Sapi survived — but not without a permanent mark.",
-          "A large hollow was left in the center of his face, which he keeps hidden behind a wooden mask. He doesn't want to accept what happened to Earth, or let anyone see what was left behind.",
-        ],
-        images: ["image104.jpg"],
-        layout: "split",
-        side: "left",
       },
       {
         paragraphs: [
           "Sapi has tried many times to restore Earth to what it was before the impact.",
           "Every attempt has failed. Something is always missing. For his plan to work, Sapi needs one final piece: a powerful source of energy. And that search eventually brings him to Blo.",
         ],
-        images: ["image19.jpg", "image59.jpg"],
-        layout: "masonry",
       },
       {
         subheading: "Character Direction",
         paragraphs: [
           "Sapi was designed as an anti-hero rather than a straightforward villain. His actions come from his inability to accept the world's transformation. He is trying to repair something he believes should never have been changed, even if doing so means interfering with the new world that exists now.",
         ],
-        images: ["image61.jpg"],
+        images: ["image61.jpg", "image19.jpg", "image59.jpg"],
         layout: "split",
         side: "left",
       },
@@ -197,11 +188,18 @@ export const skySwampStory: StoryChapter[] = [
           "He has lived long enough to witness almost everything that happened to Earth. Because of this, Goji carries knowledge that few others in the world possess.",
           "When Blo reaches the Moon, Goji finds him and takes him in. From that point on, he becomes an important part of Blo's journey and the events that follow.",
         ],
-        images: ["image2.jpg"],
+        images: ["image2.jpg", "image33.jpg", "image77.jpg"],
         layout: "split",
         side: "left",
       },
-      { images: ["image33.jpg", "image77.jpg"], layout: "masonry" },
+      {
+        subheading: "Goji's Spaceship",
+        paragraphs: [
+          "Since Goji can no longer fly like the other stars, he had to find another way to travel. He built his own spaceship. The design started with quick explorations of different shapes, sizes, and ways Goji could move through space. I wanted the ships to feel like something Goji could have built himself — functional, strange, and a little improvised. These sketches are part of the early design process, exploring different silhouettes and ideas before settling on a direction for the final ship.",
+        ],
+        images: ["image97.jpg", "image52.jpg", "image113.jpg", "image34.jpg"],
+        layout: "masonry",
+      },
       {
         subheading: "The Secret Garden",
         paragraphs: [
@@ -216,14 +214,6 @@ export const skySwampStory: StoryChapter[] = [
         layout: "split",
         side: "left",
       },
-      {
-        subheading: "Goji's Spaceship",
-        paragraphs: [
-          "Since Goji can no longer fly like the other stars, he had to find another way to travel. He built his own spaceship. The design started with quick explorations of different shapes, sizes, and ways Goji could move through space. I wanted the ships to feel like something Goji could have built himself — functional, strange, and a little improvised. These sketches are part of the early design process, exploring different silhouettes and ideas before settling on a direction for the final ship.",
-        ],
-        images: ["image97.jpg", "image52.jpg", "image113.jpg", "image34.jpg"],
-        layout: "masonry",
-      },
     ],
   },
   {
@@ -233,15 +223,19 @@ export const skySwampStory: StoryChapter[] = [
     subheading: "The Spirit of the Swamp",
     beats: [
       {
+        subheading: "Dusha is the spirit of the swamp and a quiet guardian of Blo and Bla Bla.",
         paragraphs: [
-          "Dusha is the spirit of the swamp and a quiet guardian of Blo and Bla Bla.",
           "She rarely reveals herself. Calm and almost ghost-like, she stays hidden among the trees, watching from a distance and appearing only when something important happens.",
           "Dusha can fly effortlessly through the swamp, slipping between branches and disappearing into the vegetation almost as quickly as she appears.",
           "Her presence is meant to feel mysterious rather than threatening — a character who is always somewhere nearby, quietly protecting the world and the two friends within it.",
         ],
-        images: ["image10.jpg", "image102.jpg"],
+        images: ["image60.jpg"],
         layout: "split",
-        side: "right",
+        side: "left",
+      },
+      {
+        images: ["image10.jpg", "image102.jpg"],
+        layout: "masonry",
       },
     ],
   },
@@ -308,11 +302,10 @@ export const skySwampStory: StoryChapter[] = [
       },
       { caption: "Blo & Bla Bla house", images: ["image6.jpg"], layout: "feature" },
       {
-        images: ["image49.jpg", "image115.jpg", "image103.jpg"],
-        layout: "masonry",
-      },
-      {
         images: [
+          "image49.jpg",
+          "image115.jpg",
+          "image103.jpg",
           "image41.jpg",
           "image51.jpg",
           "image107.jpg",

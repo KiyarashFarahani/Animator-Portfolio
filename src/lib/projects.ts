@@ -11,7 +11,7 @@ export interface StoryBeat {
   subheading?: string;
   paragraphs?: string[];
   images?: string[];
-  layout?: "feature" | "duo" | "trio" | "masonry" | "split";
+  layout?: "feature" | "duo" | "trio" | "masonry" | "split" | "tall-stack";
   caption?: string;
   /** which side images sit on in split layout (default "right") */
   side?: "left" | "right";

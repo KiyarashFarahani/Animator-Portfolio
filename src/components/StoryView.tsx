@@ -99,6 +99,70 @@ function Duo({ items }: { items: MediaItemWithMeta[] }) {
   );
 }
 
+function TallStack({ items, compact }: { items: MediaItemWithMeta[]; compact?: boolean }) {
+  const tall = items[0];
+  const top = items[1];
+  const bottom = items[2];
+  if (!tall || !top || !bottom) return null;
+  const TALL_H = compact ? 420 : 640;
+  const GAP = 16;
+  const SQ_H = Math.round((TALL_H - GAP) / 2);
+  const tallDims = scaledDims(tall.meta, TALL_H);
+  const topDims = scaledDims(top.meta, SQ_H);
+  const bottomDims = scaledDims(bottom.meta, SQ_H);
+  const sqDims = [topDims, bottomDims];
+  const tallHCls = compact ? "sm:h-[420px]" : "sm:h-[640px]";
+  const stackHCls = compact ? "sm:h-[420px]" : "sm:h-[640px]";
+  const sqCls = compact
+    ? "aspect-square h-auto w-full rounded-2xl object-cover ring-1 ring-white/10 sm:aspect-auto sm:h-[202px] sm:w-[202px]"
+    : "aspect-square h-auto w-full rounded-2xl object-cover ring-1 ring-white/10 sm:aspect-auto sm:h-[312px] sm:w-[312px]";
+  return (
+    <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-stretch sm:justify-center">
+      <ViewableMedia item={tall} siblings={items} className="shrink-0 cursor-zoom-in">
+        {tall.meta && tallDims ? (
+          <Image
+            src={srcOf(tall)}
+            alt={tall.name}
+            width={tallDims.w}
+            height={tallDims.h}
+            blurDataURL={tall.meta.blur}
+            placeholder="blur"
+            sizes={`(min-width:640px) ${tallDims.w}px, 100vw`}
+            className={`h-auto w-full max-w-full rounded-2xl ring-1 ring-white/10 ${tallHCls} sm:w-auto`}
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={srcOf(tall)} alt={tall.name} loading="lazy" className={`h-auto w-full rounded-2xl ring-1 ring-white/10 ${tallHCls} sm:w-auto`} />
+        )}
+      </ViewableMedia>
+      <div className={`flex w-full max-w-[360px] flex-row gap-4 sm:w-auto sm:max-w-none sm:flex-col ${stackHCls}`}>
+        {[top, bottom].map((item, idx) => {
+          const dims = sqDims[idx];
+          return (
+            <ViewableMedia key={item.src} item={item} siblings={items} className="flex-1 cursor-zoom-in sm:flex-none">
+              {item.meta && dims ? (
+                <Image
+                  src={srcOf(item)}
+                  alt={item.name}
+                  width={dims.w}
+                  height={dims.h}
+                  blurDataURL={item.meta.blur}
+                  placeholder="blur"
+                  sizes={`(min-width:640px) ${dims.w}px, 50vw`}
+                  className={sqCls}
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={srcOf(item)} alt={item.name} loading="lazy" className={sqCls} />
+              )}
+            </ViewableMedia>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function SplitImage({ item }: { item: MediaItemWithMeta }) {
   const dims = scaledDims(item.meta, 400);
   if (!item.meta || !dims) {
@@ -166,29 +230,31 @@ function Split({ beat, get }: { beat: StoryBeat; get: (names: string[]) => Media
     <ParagraphBlock subheading={beat.subheading} paragraphs={beat.paragraphs} align="left" />
   );
 
-  const images =
-    items.length > 2 ? (
-      <MediaGrid media={items} maxCols={cols} />
-    ) : (
-      <div>
-        <div
-          className={
-            cols === 2
-              ? "grid items-center justify-items-center gap-4 sm:grid-cols-2"
-              : "flex flex-col items-center gap-4"
-          }
-        >
-          {items.map((item) => (
-            <ViewableMedia key={item.src} item={item} siblings={items}>
-              <SplitImage item={item} />
-            </ViewableMedia>
-          ))}
-        </div>
-        {beat.caption ? (
-          <p className="mt-3 text-center text-sm text-white/50">{beat.caption}</p>
-        ) : null}
+  const useTallStack = items.length === 3 && beat.layout === "split";
+  const images = useTallStack ? (
+    <TallStack items={items} compact />
+  ) : items.length > 2 ? (
+    <MediaGrid media={items} maxCols={cols} />
+  ) : (
+    <div>
+      <div
+        className={
+          cols === 2
+            ? "grid items-center justify-items-center gap-4 sm:grid-cols-2"
+            : "flex flex-col items-center gap-4"
+        }
+      >
+        {items.map((item) => (
+          <ViewableMedia key={item.src} item={item} siblings={items}>
+            <SplitImage item={item} />
+          </ViewableMedia>
+        ))}
       </div>
-    );
+      {beat.caption ? (
+        <p className="mt-3 text-center text-sm text-white/50">{beat.caption}</p>
+      ) : null}
+    </div>
+  );
 
   return (
     <div className="grid items-center gap-10 md:grid-cols-2 md:gap-14">
@@ -222,6 +288,14 @@ function Beat({
 
   if (layout === "split") {
     return <Split beat={beat} get={get} />;
+  }
+  if (layout === "tall-stack") {
+    return (
+      <div className="space-y-12">
+        <ParagraphBlock subheading={beat.subheading} paragraphs={beat.paragraphs} />
+        {items.length >= 3 && <TallStack items={items.slice(0, 3)} compact={false} />}
+      </div>
+    );
   }
 
   return (
