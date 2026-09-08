@@ -41,12 +41,13 @@ yarn-error.log*
 next-env.d.ts
 
 # local media (too large for git)
-/public/Animate/
-/public/Sky Swamp/
-/public/character-concept/
-/public/short movie/
-/public/sky-swamp-docx/
-/public/skyswamp.docx
+#/public/Animate/
+#/public/Sky Swamp/
+#/public/character-concept/
+#/public/short movie/
+#/public/sky-swamp-docx/
+#/public/skyswamp.docx
+/public/Backup/
 # generated media metadata + video posters (regenerated from local media at build)
 /media-manifest.json
 /public/video-posters/

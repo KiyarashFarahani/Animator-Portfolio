@@ -39,7 +39,15 @@ export async function collectMedia(dir: string): Promise<MediaItem[]> {
   }
 
   await walk(dir);
-  return out.sort((a, b) =>
+  const byBase = new Map<string, MediaItem>();
+  for (const item of out) {
+    const base = item.src.replace(/\.[^.]+$/, "").toLowerCase();
+    const prev = byBase.get(base);
+    if (!prev) byBase.set(base, item);
+    else if (prev.kind === "video" && prev.src.toLowerCase().endsWith(".webm") && item.src.toLowerCase().endsWith(".mp4")) byBase.set(base, item);
+  }
+  const deduped = [...byBase.values()];
+  return deduped.sort((a, b) =>
     a.src.localeCompare(b.src, undefined, { numeric: true, sensitivity: "base" })
   );
 }

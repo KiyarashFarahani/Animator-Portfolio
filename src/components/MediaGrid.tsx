@@ -127,6 +127,27 @@ function TileImg({
   );
 }
 
+function TileLoopVideo({ src, aspect, fitSquare }: { src: string; aspect?: string; fitSquare?: boolean }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <span className={`relative block w-full overflow-hidden ${fitSquare ? "bg-white" : ""}`} style={{ aspectRatio: fitSquare ? "1/1" : aspect }}>
+      {!loaded && <span aria-hidden className="skeleton skeleton-shimmer absolute inset-0" />}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="metadata"
+        onLoadedData={() => setLoaded(true)}
+        onCanPlay={() => setLoaded(true)}
+        className={`pointer-events-none h-full w-full object-cover transition-opacity duration-500 ${fitSquare ? "object-contain" : "object-cover"} ${loaded ? "opacity-100" : "opacity-0"}`}
+      >
+        <source src={src} type={src.endsWith(".webm") ? "video/webm" : "video/mp4"} />
+      </video>
+    </span>
+  );
+}
+
 function TileVideo({
   src,
   poster,
@@ -281,6 +302,7 @@ export default function MediaGrid({
             {column.map(({ item, index }) => {
               const priority = index < priorityCount && item.kind === "image";
               const animated = /\.gif$/i.test(item.src);
+              const loopVideo = item.kind === "video" && item.src.startsWith("Animate/");
               const aspect = item.meta ? `${item.meta.w}/${item.meta.h}` : undefined;
               const open = (e: ReactMouseEvent<HTMLButtonElement>) => {
                 const r = e.currentTarget.getBoundingClientRect();
@@ -317,6 +339,8 @@ export default function MediaGrid({
                       aria-hidden
                       className={`block w-full ${fitSquare ? "aspect-square bg-white" : "skeleton skeleton-shimmer aspect-[4/3]"}`}
                     />
+                  ) : loopVideo ? (
+                    <TileLoopVideo src={srcOf(item)} aspect={aspect} fitSquare={fitSquare} />
                   ) : (
                     <TileVideo src={srcOf(item)} poster={item.meta?.poster} alt={item.name} aspect={aspect} meta={item.meta} fitSquare={fitSquare} />
                   )}

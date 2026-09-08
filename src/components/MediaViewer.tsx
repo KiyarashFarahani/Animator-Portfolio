@@ -259,9 +259,7 @@ export default function MediaViewer({
   if (!mounted) return null;
 
   const item = items[current] ?? items[index];
-  // Same image pipeline as the grid (optimizer + inline blur placeholder),
-  // so first open reuses cached variants instead of flashing in a fresh
-  // full-size download. GIFs stay on plain <img> to preserve animation.
+  const isLoopVideo = item.kind === "video" && item.src.startsWith("Animate/");
   const useOptimized = item.kind === "image" && item.meta && !isGif(item.src);
 
   const navBtn =
@@ -285,7 +283,20 @@ export default function MediaViewer({
         className="absolute overflow-hidden rounded-2xl bg-neutral-900 ring-1 ring-white/15"
       >
         <div ref={contentRef} className="h-full w-full">
-          {item.kind === "video" ? (
+          {isLoopVideo ? (
+            <video
+              key={item.src}
+              autoPlay
+              loop
+              muted
+              playsInline
+              controls
+              preload="auto"
+              className="h-full w-full object-cover"
+            >
+              <source src={srcOf(item)} type={item.src.endsWith(".webm") ? "video/webm" : "video/mp4"} />
+            </video>
+          ) : item.kind === "video" ? (
             <video
               key={item.src}
               src={srcOf(item)}
