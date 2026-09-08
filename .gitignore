@@ -48,6 +48,4 @@ next-env.d.ts
 #/public/sky-swamp-docx/
 #/public/skyswamp.docx
 /public/Backup/
-# generated media metadata + video posters (regenerated from local media at build)
-/media-manifest.json
-/public/video-posters/
+# generated media metadata + video posters — committed for Vercel (no ffmpeg there)
