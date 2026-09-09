@@ -1,5 +1,3 @@
-"use client";
-
 import Image from "next/image";
 
 interface SoftwareLogoProps {
@@ -43,9 +41,18 @@ export default function SoftwareLogo({
   if (!showLabel) return tile;
 
   return (
-    <span className={`inline-flex flex-col items-center gap-2 ${className}`}>
+    <span className={`flex w-[5.5rem] flex-col items-center gap-2 sm:w-24 ${className}`}>
       {tile}
-      <span className="text-xs font-medium text-white/60">{name}</span>
+      <span
+        className="min-h-[2.5em] w-full overflow-hidden text-center text-[11px] font-medium leading-tight text-white/60 sm:text-xs"
+        style={{
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+        }}
+      >
+        {name}
+      </span>
     </span>
   );
 }

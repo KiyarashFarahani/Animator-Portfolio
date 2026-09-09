@@ -115,7 +115,7 @@ export default function AboutSection({
 
         <div className="border-t border-white/10 pt-16">
           <h2 className="text-3xl font-bold text-white">Software</h2>
-          <div className="mt-10 flex flex-wrap gap-4">
+          <div className="mt-10 grid grid-cols-3 justify-items-center gap-x-2 gap-y-6 sm:flex sm:flex-wrap sm:justify-start sm:gap-4 sm:gap-y-8">
             {aboutData.software.map((software) => (
               <SoftwareLogo
                 key={software}
