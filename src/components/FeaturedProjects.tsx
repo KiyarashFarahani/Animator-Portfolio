@@ -32,16 +32,16 @@ export default function FeaturedProjects() {
         <DriftWall
           items={items}
           columns={5}
-          tileWidth={240}
-          tileHeight={160}
-          gap={18}
-          tilt={14}
-          turn={-12}
-          perspective={1100}
-          depth={90}
-          speed={32}
-          variance={0.4}
-          parallax={0.5}
+          tileWidth={280}
+          tileHeight={186}
+          gap={20}
+          tilt={10}
+          turn={-8}
+          perspective={1200}
+          depth={70}
+          speed={12}
+          variance={0.25}
+          parallax={0.25}
           fade={0.45}
           dim={0.65}
           overlayColor="#05080c"
