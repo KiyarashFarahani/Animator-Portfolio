@@ -1,0 +1,18 @@
+export const FEATURED_ASSETS = [
+  "character-concept/Co/15.jpg",
+  "sky-swamp-docx/image25.jpg",
+  "character-concept/Co/14.jpg",
+  "character-concept/Co/11.jpg",
+  "sky-swamp-docx/image68.jpg",
+  "sky-swamp-docx/image23.jpg",
+  "Animate/a1.gif",
+  "sky-swamp-docx/image1.jpg",
+  "character-concept/Ch01/25.jpg",
+  "character-concept/Co/12.jpg",
+  "sky-swamp-docx/image2.jpg",
+  "character-concept/Ch01/22.jpg",
+  "sky-swamp-docx/image39.jpg",
+  "Animate/baseball.gif",
+  "character-concept/Co/13.jpg",
+  "character-concept/Co/01.jpg",
+] as const;

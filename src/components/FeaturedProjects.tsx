@@ -1,30 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { FEATURED_ASSETS } from "@/lib/featured-assets";
 import DriftWall from "./DriftWall";
 
-const ASSETS = [
-    "character-concept/Co/15.jpg",
-    "sky-swamp-docx/image25.jpg",
-    "character-concept/Co/14.jpg",
-    "character-concept/Co/11.jpg",
-    "sky-swamp-docx/image68.jpg",
-    "sky-swamp-docx/image23.jpg",
-    "Animate/a1.gif",
-    "sky-swamp-docx/image1.jpg",
-    "character-concept/Ch01/25.jpg",
-    "character-concept/Co/12.jpg",
-    "sky-swamp-docx/image2.jpg",
-    "character-concept/Ch01/22.jpg",
-    "sky-swamp-docx/image39.jpg",
-    "Animate/baseball.gif",
-    "character-concept/Co/13.jpg",
-    "character-concept/Co/01.jpg",
 
-];
 
 export default function FeaturedProjects() {
-  const items = ASSETS.map((src) => ({ image: `/${src}`, title: src.split("/").pop() ?? src }));
+  const items = FEATURED_ASSETS.map((src) => ({ image: `/${src}`, title: src.split("/").pop() ?? src }));
 
   return (
     <section className="w-screen relative left-1/2 -ml-[50vw] h-screen bg-[#05080c] overflow-hidden isolate">

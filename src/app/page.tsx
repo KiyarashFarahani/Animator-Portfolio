@@ -1,6 +1,7 @@
 import { projects } from "@/lib/projects";
 import { collectMedia } from "@/lib/projects-server";
 import FeaturedProjects from "@/components/FeaturedProjects";
+import { FEATURED_ASSETS } from "@/lib/featured-assets";
 import AboutSection from "@/components/AboutSection";
 import SplashScreen from "@/components/SplashScreen";
 import Hero from "@/components/Hero";
@@ -36,6 +37,7 @@ export default async function Home() {
     "/Hero/dusha_02_bg.png",
     "/Hero/animation.gif",
     "/About/profile.webp",
+    ...FEATURED_ASSETS.slice(0, 5).map((s) => `/${s}`),
     ...covers.filter((c): c is NonNullable<typeof c> => c !== null).map((c) => `/${c.src}`),
   ];
   return (
