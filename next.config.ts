@@ -4,8 +4,8 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.1.3"],
   images: {
     minimumCacheTTL: 60 * 60 * 24 * 30,
-    deviceSizes: [640, 750, 1080, 1920],
-    imageSizes: [256, 384],
+    deviceSizes: [320, 640, 750, 1080, 1920],
+    imageSizes: [128, 256, 384],
     formats: ["image/avif", "image/webp"],
   },
   async headers() {

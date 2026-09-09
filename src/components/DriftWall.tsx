@@ -1,11 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import { CSSProperties, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 export interface DriftWallItem {
   image: string;
   title?: string;
   href?: string;
+  blurDataURL?: string;
+  width?: number;
+  height?: number;
 }
 
 export interface DriftWallProps {
@@ -52,39 +56,74 @@ const cx = (...parts: (string | false | undefined)[]) => parts.filter(Boolean).j
 const prefersReducedMotion = (): boolean =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-function DriftTileImg({ src, reduced, eager }: { src: string; reduced: boolean; eager?: boolean }) {
+function isGif(src: string): boolean {
+  return src.toLowerCase().endsWith(".gif");
+}
+
+function DriftTileImg({
+  src,
+  reduced,
+  eager,
+  blurDataURL,
+  tileWidth,
+  tileHeight,
+}: {
+  src: string;
+  reduced: boolean;
+  eager?: boolean;
+  blurDataURL?: string;
+  tileWidth: number;
+  tileHeight: number;
+}) {
   const [loaded, setLoaded] = useState(false);
-  const ref = useRef<HTMLImageElement>(null);
-  const trigger = useCallback(() => setLoaded(true), []);
-  useEffect(() => {
-    const el = ref.current;
-    if (el?.complete && el.naturalWidth > 0) {
-      const id = requestAnimationFrame(() => requestAnimationFrame(trigger));
-      return () => cancelAnimationFrame(id);
-    }
-  }, [src, trigger]);
+  const gif = isGif(src);
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      ref={ref}
-      src={src}
-      alt=""
-      loading={eager ? "eager" : "lazy"}
-      fetchPriority={eager ? "high" : "auto"}
-      decoding={eager ? "sync" : "async"}
-      draggable={false}
-      onLoad={trigger}
-      onError={trigger}
-      suppressHydrationWarning
+    <span
       className={cx(
-        "block h-full w-full select-none object-cover",
+        "block h-full w-full relative overflow-hidden",
         reduced ? (loaded ? "opacity-100" : "opacity-0") : loaded ? "opacity-100 scale-100 blur-0" : "opacity-0 scale-[1.06] blur-[6px]"
       )}
       style={{
         transition: reduced ? "opacity 360ms ease-out" : "opacity 700ms ease-out, transform 700ms ease-out, filter 700ms ease-out",
         willChange: loaded ? "auto" : "opacity, transform, filter",
+        contentVisibility: "auto" as never,
+        containIntrinsicSize: `${tileWidth}px ${tileHeight}px` as never,
       }}
-    />
+    >
+      {blurDataURL && !loaded && (
+        <span
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url(${blurDataURL})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            filter: "blur(12px)",
+            transform: "scale(1.08)",
+          }}
+        />
+      )}
+      <Image
+        src={src}
+        alt=""
+        width={tileWidth}
+        height={tileHeight}
+        sizes={`${tileWidth}px`}
+        quality={75}
+        priority={!!eager}
+        loading={eager ? "eager" : "lazy"}
+        decoding={eager ? "sync" : "async"}
+        unoptimized={gif || src.startsWith("https://")}
+        placeholder={blurDataURL ? "blur" : "empty"}
+        blurDataURL={blurDataURL || undefined}
+        draggable={false}
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+        className="block h-full w-full select-none object-cover"
+        style={{ objectFit: "cover" }}
+      />
+      {gif && !loaded && <span className="skeleton-shimmer absolute inset-0" aria-hidden />}
+    </span>
   );
 }
 
@@ -149,18 +188,24 @@ const DriftWall = ({
     const unit = tileHeight + gap;
     return columnItems.map((col) => {
       const copyHeight = Math.max(unit, col.length * unit);
-      const copies = Math.max(3, Math.ceil((containerHeight * 2.6) / copyHeight) + 2);
+      const copies = Math.max(2, Math.ceil((containerHeight * 1.6) / copyHeight) + 1);
       return { copyHeight, copies };
     });
   }, [columnItems, tileHeight, gap, containerHeight]);
 
   useLayoutEffect(() => {
     if (!containerRef.current) return;
+    let raf = 0;
     const ro = new ResizeObserver(([entry]) => {
-      setContainerHeight(entry.contentRect.height || 600);
+      const h = entry.contentRect.height || 600;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setContainerHeight(h));
     });
     ro.observe(containerRef.current);
-    return () => ro.disconnect();
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
   }, []);
 
   const baseVelocities = useMemo<number[]>(() => {
@@ -196,58 +241,15 @@ const DriftWall = ({
     [tilt, turn, roll, depth]
   );
 
-  useEffect(() => {
-    const onCover = () => {
-      pausedRef.current = true;
-    };
-    const onDone = () => {
-      pausedRef.current = false;
-      lastTsRef.current = null;
-    };
-    const onVis = () => {
-      if (document.hidden) pausedRef.current = true;
-      else if (visibleRef.current) {
-        pausedRef.current = false;
-        lastTsRef.current = null;
-      }
-    };
-    window.addEventListener("ma:page-transition-cover", onCover);
-    window.addEventListener("ma:page-transition-done", onDone);
-    window.addEventListener("ma:splash-exit", onCover);
-    window.addEventListener("ma:splash-done", onDone);
-    document.addEventListener("visibilitychange", onVis);
-    const root = containerRef.current;
-    let io: IntersectionObserver | null = null;
-    if (root && typeof IntersectionObserver !== "undefined") {
-      io = new IntersectionObserver(
-        ([entry]) => {
-          visibleRef.current = !!entry?.isIntersecting;
-          if (!entry?.isIntersecting) pausedRef.current = true;
-          else if (!document.hidden) {
-            pausedRef.current = false;
-            lastTsRef.current = null;
-          }
-        },
-        { threshold: 0 }
-      );
-      io.observe(root);
-    }
-    return () => {
-      window.removeEventListener("ma:page-transition-cover", onCover);
-      window.removeEventListener("ma:page-transition-done", onDone);
-      window.removeEventListener("ma:splash-exit", onCover);
-      window.removeEventListener("ma:splash-done", onDone);
-      document.removeEventListener("visibilitychange", onVis);
-      if (io && root) io.unobserve(root);
-      io?.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
+  const startLoop = useCallback(() => {
+    if (rafRef.current !== null) return;
     const animate = (ts: number) => {
       if (pausedRef.current || !visibleRef.current || document.hidden) {
         lastTsRef.current = null;
-        rafRef.current = requestAnimationFrame(animate);
+        if (rafRef.current !== null) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
         return;
       }
       if (lastTsRef.current === null) lastTsRef.current = ts;
@@ -285,14 +287,76 @@ const DriftWall = ({
 
       rafRef.current = requestAnimationFrame(animate);
     };
-
     rafRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-      lastTsRef.current = null;
-    };
   }, [baseVelocities, columnMeta, parallax, reduced, applyPlaneTransform]);
+
+  const stopLoop = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    lastTsRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    const onCover = () => {
+      pausedRef.current = true;
+      stopLoop();
+    };
+    const onDone = () => {
+      pausedRef.current = false;
+      lastTsRef.current = null;
+      startLoop();
+    };
+    const onVis = () => {
+      if (document.hidden) {
+        pausedRef.current = true;
+        stopLoop();
+      } else if (visibleRef.current) {
+        pausedRef.current = false;
+        lastTsRef.current = null;
+        startLoop();
+      }
+    };
+    window.addEventListener("ma:page-transition-cover", onCover);
+    window.addEventListener("ma:page-transition-done", onDone);
+    window.addEventListener("ma:splash-exit", onCover);
+    window.addEventListener("ma:splash-done", onDone);
+    document.addEventListener("visibilitychange", onVis);
+    const root = containerRef.current;
+    let io: IntersectionObserver | null = null;
+    if (root && typeof IntersectionObserver !== "undefined") {
+      io = new IntersectionObserver(
+        ([entry]) => {
+          visibleRef.current = !!entry?.isIntersecting;
+          if (!entry?.isIntersecting) {
+            pausedRef.current = true;
+            stopLoop();
+          } else if (!document.hidden) {
+            pausedRef.current = false;
+            lastTsRef.current = null;
+            startLoop();
+          }
+        },
+        { threshold: 0 }
+      );
+      io.observe(root);
+    }
+    return () => {
+      window.removeEventListener("ma:page-transition-cover", onCover);
+      window.removeEventListener("ma:page-transition-done", onDone);
+      window.removeEventListener("ma:splash-exit", onCover);
+      window.removeEventListener("ma:splash-done", onDone);
+      document.removeEventListener("visibilitychange", onVis);
+      if (io && root) io.unobserve(root);
+      io?.disconnect();
+    };
+  }, [startLoop, stopLoop]);
+
+  useEffect(() => {
+    startLoop();
+    return () => stopLoop();
+  }, [startLoop, stopLoop]);
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
@@ -355,9 +419,17 @@ const DriftWall = ({
                     <div
                       key={`${c}-${copyIndex}-${itemIndex}`}
                       className="relative block flex-none w-full h-[calc(var(--dw-tile-h)+var(--dw-gap))] [transform-style:preserve-3d]"
+                      style={{ contentVisibility: "auto" as never, containIntrinsicSize: `${tileWidth}px ${tileHeight + gap}px` as never }}
                     >
                       <span className="absolute inset-[calc(var(--dw-gap)/2)] block overflow-hidden bg-[#0a1218] rounded-[var(--dw-radius)] opacity-[var(--dw-dim)] [transform:translateZ(0)]">
-                        <DriftTileImg src={item.image} reduced={reduced} eager={copyIndex === 0 && itemIndex === 0} />
+                        <DriftTileImg
+                          src={item.image}
+                          reduced={reduced}
+                          eager={copyIndex === 0 && itemIndex === 0}
+                          blurDataURL={item.blurDataURL}
+                          tileWidth={tileWidth}
+                          tileHeight={tileHeight}
+                        />
                         <span className="pointer-events-none absolute inset-0 bg-[var(--dw-overlay)] opacity-[0.28]" aria-hidden="true" />
                       </span>
                     </div>

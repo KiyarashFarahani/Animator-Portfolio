@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { FEATURED_ASSETS } from "@/lib/featured-assets";
+import { DRIFT_WALL_META } from "@/lib/drift-wall-manifest";
 import DriftWall from "./DriftWall";
 
-
-
 export default function FeaturedProjects() {
-  const items = FEATURED_ASSETS.map((src) => ({ image: `/${src}`, title: src.split("/").pop() ?? src }));
+  const items = FEATURED_ASSETS.map((src) => {
+    const meta = (DRIFT_WALL_META as Record<string, { blur: string; w: number; h: number }>)[src];
+    return { image: `/${src}`, title: src.split("/").pop() ?? src, blurDataURL: meta?.blur, width: meta?.w, height: meta?.h };
+  });
 
   return (
     <section className="w-screen relative left-1/2 -ml-[50vw] h-screen bg-[#05080c] overflow-hidden isolate">
@@ -30,7 +32,7 @@ export default function FeaturedProjects() {
           overlayColor="#05080c"
         />
       </div>
-      <div className="absolute inset-0 bg-[#05080c]/55 backdrop-blur-[0.5px]" aria-hidden="true" />
+      <div className="absolute inset-0 bg-[#05080c]/55" aria-hidden="true" />
       <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
         <p className="text-sm font-semibold tracking-[0.2em] text-white/50 uppercase">Selected Work</p>
         <h2 className="mt-3 max-w-3xl text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl text-balance">

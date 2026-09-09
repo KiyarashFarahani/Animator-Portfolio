@@ -9,7 +9,7 @@ export default function Home() {
     "/Hero/dusha_02_bg.png",
     "/Hero/animation.gif",
     "/About/profile.webp",
-    ...FEATURED_ASSETS.slice(0, 5).map((s) => `/${s}`),
+    ...FEATURED_ASSETS.map((s) => `/${s}`),
   ];
   return (
     <>
