@@ -44,7 +44,8 @@ export default async function Home() {
       <main className="min-h-screen w-full">
         <Hero />
 
-        <FeaturedProjects covers={covers} />
+        <div className="h-12 sm:h-16 lg:h-20 bg-[#05080c]" aria-hidden="true" />
+        <FeaturedProjects />
         <AboutSection variant="full" />
       </main>
     </>

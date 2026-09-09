@@ -88,7 +88,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative min-h-screen w-full overflow-hidden">
+    <section ref={sectionRef} className="relative min-h-screen w-full overflow-hidden bg-[#05080c]">
       <div ref={bgRef} className="absolute inset-0 will-change-transform">
         <Image
           src="/Hero/dusha_02_bg.png"
@@ -102,6 +102,7 @@ export default function Hero() {
         />
       </div>
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[18%] bg-gradient-to-t from-[#05080c] to-transparent" aria-hidden="true" />
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col-reverse items-center justify-center gap-8 px-6 py-12 md:flex-row md:items-center md:justify-between md:gap-2 md:px-8 lg:px-12 md:py-0">
         <div ref={textRef} className="max-w-xl shrink-0 text-center md:text-left">

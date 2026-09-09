@@ -1,99 +1,67 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { projects } from "@/lib/projects";
-import { motion, useScroll, useTransform } from "motion/react";
-import { MediaItem } from "@/lib/projects-server";
+import DriftWall from "./DriftWall";
 
-interface FeaturedProjectsProps {
-  covers: Array<MediaItem | null>;
-}
+const ASSETS = [
+    "character-concept/Co/15.jpg",
+    "sky-swamp-docx/image25.jpg",
+    "character-concept/Co/14.jpg",
+    "character-concept/Co/11.jpg",
+    "sky-swamp-docx/image68.jpg",
+    "sky-swamp-docx/image23.jpg",
+    "Animate/a1.gif",
+    "sky-swamp-docx/image1.jpg",
+    "character-concept/Ch01/25.jpg",
+    "character-concept/Co/12.jpg",
+    "sky-swamp-docx/image2.jpg",
+    "character-concept/Ch01/22.jpg",
+    "sky-swamp-docx/image39.jpg",
+    "Animate/baseball.gif",
+    "character-concept/Co/13.jpg",
+    "character-concept/Co/01.jpg",
 
-export default function FeaturedProjects({ covers }: FeaturedProjectsProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const stickyRef = useRef<HTMLDivElement>(null);
-  const galleryRef = useRef<HTMLDivElement>(null);
-  const [distance, setDistance] = useState(0);
+];
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
-
-  const x = useTransform(scrollYProgress, [0, 1], [0, -distance]);
-
-  useLayoutEffect(() => {
-    const gallery = galleryRef.current;
-    const sticky = stickyRef.current;
-    if (!gallery || !sticky) return;
-    const update = () => setDistance(Math.max(0, gallery.scrollWidth - sticky.clientWidth));
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(gallery);
-    ro.observe(sticky);
-    window.addEventListener("resize", update);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", update);
-    };
-  }, [covers]);
+export default function FeaturedProjects() {
+  const items = ASSETS.map((src) => ({ image: `/${src}`, title: src.split("/").pop() ?? src }));
 
   return (
-    <section className="mx-auto max-w-7xl px-6 lg:px-16 pt-24 pb-10">
-      <div ref={containerRef} className="scroll-container relative h-[220vh]">
-        <div ref={stickyRef} className="sticky-wrapper sticky top-0 flex h-[100vh] flex-col justify-center gap-8 overflow-hidden py-10">
-          <div className="flex items-center justify-between">
-            <h2 className="text-3xl font-bold text-white">Featured Projects</h2>
-            <Link href="/projects" className="text-sm font-semibold text-white/60 hover:text-white transition">
-              View all →
-            </Link>
-          </div>
-
-          <motion.div ref={galleryRef} className="gallery flex gap-6 will-change-transform" style={{ x }}>
-            {projects.map((project, i) => (
-              <Link
-                key={project.slug}
-                href={`/projects/${project.slug}`}
-                className="group relative flex-shrink-0 aspect-[16/10] w-[360px] sm:w-[520px] lg:w-[640px] rounded-2xl bg-neutral-900/50 ring-1 ring-white/10 overflow-hidden transition hover:ring-white/30 hover:bg-neutral-900"
-              >
-                {covers[i] ? (
-                  covers[i]!.kind === "video" ? (
-                    <video
-                      src={encodeURI(`/${covers[i]!.src}`)}
-                      muted
-                      playsInline
-                      preload="metadata"
-                      className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                    />
-                  ) : /\.gif$/i.test(covers[i]!.src) ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={encodeURI(`/${covers[i]!.src}`)}
-                      alt={project.title}
-                      className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                    />
-                  ) : (
-                    <Image
-                      src={`/${covers[i]!.src}`}
-                      alt={project.title}
-                      fill
-                      sizes="(max-width: 640px) 360px, (max-width: 1024px) 520px, 640px"
-                      className="object-cover transition duration-300 group-hover:scale-[1.03]"
-                    />
-                  )
-                ) : (
-                  <div className="h-full w-full bg-neutral-800" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6 flex flex-col justify-end">
-                  <h3 className="text-xl font-bold text-white group-hover:text-white/90">{project.title}</h3>
-                  <p className="mt-2 text-sm text-white/50 line-clamp-2">{project.description}</p>
-                </div>
-              </Link>
-            ))}
-          </motion.div>
-        </div>
+    <section className="w-screen relative left-1/2 -ml-[50vw] h-screen bg-[#05080c] overflow-hidden isolate">
+      <div className="absolute inset-0">
+        <DriftWall
+          items={items}
+          columns={5}
+          tileWidth={240}
+          tileHeight={160}
+          gap={18}
+          tilt={14}
+          turn={-12}
+          perspective={1100}
+          depth={90}
+          speed={32}
+          variance={0.4}
+          parallax={0.5}
+          fade={0.45}
+          dim={0.65}
+          overlayColor="#05080c"
+        />
+      </div>
+      <div className="absolute inset-0 bg-[#05080c]/55 backdrop-blur-[0.5px]" aria-hidden="true" />
+      <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
+        <p className="text-sm font-semibold tracking-[0.2em] text-white/50 uppercase">Selected Work</p>
+        <h2 className="mt-3 max-w-3xl text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl text-balance">
+          Chatacters, Concepts & Animations
+        </h2>
+        <p className="mt-4 max-w-xl text-base leading-relaxed text-white/60 sm:text-lg">
+          Explore the full projects for films, concepts and animation.
+        </p>
+        <Link
+          href="/projects"
+          className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold tracking-wide text-[#05080c] shadow-[0_12px_32px_rgba(0,0,0,0.4)] transition hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98]"
+        >
+          Explore projects <span aria-hidden>→</span>
+        </Link>
       </div>
     </section>
   );
