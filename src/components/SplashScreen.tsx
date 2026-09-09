@@ -178,16 +178,6 @@ export default function SplashScreen({
         </div>
       </div>
 
-      <p
-        className="absolute bottom-6 text-[10px] tracking-widest text-white/20 uppercase"
-        style={{
-          opacity: exiting ? 0 : 1,
-          transition: "opacity 400ms ease",
-        }}
-      >
-        masoud azad studio
-      </p>
-
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/10"
