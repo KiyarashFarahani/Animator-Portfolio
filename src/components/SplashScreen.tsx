@@ -25,7 +25,7 @@ function preloadImages(sources: string[], onProgress: (loaded: number) => void):
 
 export default function SplashScreen({
   assets,
-  maxDuration = 2500,
+  maxDuration = 7000,
   minDuration = 500,
   oncePerSession = true,
 }: {

@@ -78,51 +78,51 @@ function DriftTileImg({
   const [loaded, setLoaded] = useState(false);
   const gif = isGif(src);
   return (
-    <span
-      className={cx(
-        "block h-full w-full relative overflow-hidden",
-        reduced ? (loaded ? "opacity-100" : "opacity-0") : loaded ? "opacity-100 scale-100 blur-0" : "opacity-0 scale-[1.06] blur-[6px]"
-      )}
-      style={{
-        transition: reduced ? "opacity 360ms ease-out" : "opacity 700ms ease-out, transform 700ms ease-out, filter 700ms ease-out",
-        willChange: loaded ? "auto" : "opacity, transform, filter",
-        contentVisibility: "auto" as never,
-        containIntrinsicSize: `${tileWidth}px ${tileHeight}px` as never,
-      }}
-    >
-      {blurDataURL && !loaded && (
+    <span className="block h-full w-full relative overflow-hidden bg-[#0a1218]">
+      {blurDataURL && (
         <span
           aria-hidden
-          className="absolute inset-0"
+          className="absolute inset-0 transition-opacity duration-300"
           style={{
             backgroundImage: `url(${blurDataURL})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             filter: "blur(12px)",
             transform: "scale(1.08)",
+            opacity: loaded ? 0 : 1,
           }}
         />
       )}
-      <Image
-        src={src}
-        alt=""
-        width={tileWidth}
-        height={tileHeight}
-        sizes={`${tileWidth}px`}
-        quality={75}
-        priority={!!eager}
-        loading={eager ? "eager" : "lazy"}
-        decoding={eager ? "sync" : "async"}
-        unoptimized={gif || src.startsWith("https://")}
-        placeholder={blurDataURL ? "blur" : "empty"}
-        blurDataURL={blurDataURL || undefined}
-        draggable={false}
-        onLoad={() => setLoaded(true)}
-        onError={() => setLoaded(true)}
-        className="block h-full w-full select-none object-cover"
-        style={{ objectFit: "cover" }}
-      />
-      {gif && !loaded && <span className="skeleton-shimmer absolute inset-0" aria-hidden />}
+      {gif && !loaded && !blurDataURL && <span className="skeleton-shimmer absolute inset-0" aria-hidden />}
+      <span
+        className={cx("absolute inset-0 block", reduced ? "" : "will-change-transform")}
+        style={{
+          opacity: loaded ? 1 : 0,
+          transform: loaded ? "scale(1) blur(0px)" : reduced ? undefined : "scale(1.06)",
+          filter: loaded ? "blur(0px)" : reduced ? undefined : "blur(6px)",
+          transition: reduced ? "opacity 360ms ease-out" : "opacity 700ms ease-out, transform 700ms ease-out, filter 700ms ease-out",
+        }}
+      >
+        <Image
+          src={src}
+          alt=""
+          width={tileWidth}
+          height={tileHeight}
+          sizes={`${tileWidth}px`}
+          quality={75}
+          priority={!!eager}
+          loading={eager ? "eager" : "lazy"}
+          decoding={eager ? "sync" : "async"}
+          unoptimized={gif || src.startsWith("https://")}
+          placeholder={blurDataURL ? "blur" : "empty"}
+          blurDataURL={blurDataURL || undefined}
+          draggable={false}
+          onLoad={() => setLoaded(true)}
+          onError={() => setLoaded(true)}
+          className="block h-full w-full select-none object-cover"
+          style={{ objectFit: "cover" }}
+        />
+      </span>
     </span>
   );
 }
@@ -357,7 +357,7 @@ const DriftWall = ({
             startLoop();
           }
         },
-        { threshold: 0 }
+        { threshold: 0, rootMargin: "600px 0px" }
       );
       io.observe(root);
     }
@@ -438,7 +438,6 @@ const DriftWall = ({
                     <div
                       key={`${c}-${copyIndex}-${itemIndex}`}
                       className="relative block flex-none w-full h-[calc(var(--dw-tile-h)+var(--dw-gap))] [transform-style:preserve-3d]"
-                      style={{ contentVisibility: "auto" as never, containIntrinsicSize: `${effTileWidth}px ${effTileHeight + effGap}px` as never }}
                     >
                       <span className="absolute inset-[calc(var(--dw-gap)/2)] block overflow-hidden bg-[#0a1218] rounded-[var(--dw-radius)] opacity-[var(--dw-dim)] [transform:translateZ(0)]">
                         <DriftTileImg

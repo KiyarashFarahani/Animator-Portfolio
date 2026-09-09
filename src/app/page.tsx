@@ -13,7 +13,7 @@ export default function Home() {
   ];
   return (
     <>
-      <SplashScreen assets={splashAssets} maxDuration={2500} />
+      <SplashScreen assets={splashAssets} maxDuration={7000} />
       <main className="min-h-screen w-full">
         <Hero />
 
