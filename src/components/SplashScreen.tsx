@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function preloadImages(sources: string[], onProgress: (loaded: number) => void): Promise<void> {
   if (sources.length === 0) return Promise.resolve();
@@ -34,13 +34,22 @@ export default function SplashScreen({
   minDuration?: number;
   oncePerSession?: boolean;
 }) {
-  const [visible, setVisible] = useState(() => {
-    if (typeof document !== "undefined" && document.documentElement.classList.contains("ma-splash-seen")) return false;
-    return true;
-  });
+  const [visible, setVisible] = useState(true);
   const [exiting, setExiting] = useState(false);
   const [progress, setProgress] = useState(0);
   const total = assets.length;
+  const assetsRef = useRef(assets);
+  assetsRef.current = assets;
+
+  useEffect(() => {
+    try {
+      if (document.documentElement.classList.contains("ma-splash-seen")) {
+        setVisible(false);
+        document.documentElement.dataset.maSplash = "done";
+        return;
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     if (!visible) return;
@@ -84,7 +93,7 @@ export default function SplashScreen({
       window.clearTimeout(tMax);
       scheduleFinish(0);
     } else {
-      preloadImages(assets, (loaded) => {
+      preloadImages(assetsRef.current, (loaded) => {
         setProgress(Math.round((loaded / total) * 100));
         if (loaded === total) {
           window.clearTimeout(tMax);
@@ -100,7 +109,7 @@ export default function SplashScreen({
       window.clearTimeout(tMax);
       document.documentElement.style.overflow = originalOverflow;
     };
-  }, [assets, maxDuration, minDuration, oncePerSession, total, visible]);
+  }, [maxDuration, minDuration, oncePerSession, total, visible]);
 
   if (!visible) return null;
 

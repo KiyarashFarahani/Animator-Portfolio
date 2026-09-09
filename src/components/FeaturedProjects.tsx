@@ -42,8 +42,8 @@ export default function FeaturedProjects({ covers }: FeaturedProjectsProps) {
 
   return (
     <section className="mx-auto max-w-7xl px-6 lg:px-16 pt-24 pb-10">
-      <div ref={containerRef} className="scroll-container relative">
-        <div ref={stickyRef} className="sticky-wrapper sticky top-0 flex h-[100vh] flex-col justify-center gap-8 py-10 overflow-hidden">
+      <div ref={containerRef} className="scroll-container relative h-[220vh]">
+        <div ref={stickyRef} className="sticky-wrapper sticky top-0 flex h-[100vh] flex-col justify-center gap-8 overflow-hidden py-10">
           <div className="flex items-center justify-between">
             <h2 className="text-3xl font-bold text-white">Featured Projects</h2>
             <Link href="/projects" className="text-sm font-semibold text-white/60 hover:text-white transition">
@@ -95,16 +95,6 @@ export default function FeaturedProjects({ covers }: FeaturedProjectsProps) {
           </motion.div>
         </div>
       </div>
-
-      <style>{`
-        .scroll-container { height: 220vh; }
-        .gallery { will-change: transform; }
-        @media (prefers-reduced-motion: reduce) {
-          .gallery { transform: none !important; }
-          .scroll-container { height: auto; }
-          .sticky-wrapper { position: relative; height: auto; overflow-x: auto; padding: 20px 0; }
-        }
-      `}</style>
     </section>
   );
 }

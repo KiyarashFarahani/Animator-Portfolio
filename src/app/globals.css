@@ -71,6 +71,18 @@ html.ma-splash-seen [data-ma-splash] {
   .skeleton-shimmer::after {
     animation: none;
   }
+  .gallery {
+    transform: none !important;
+  }
+  .scroll-container {
+    height: auto !important;
+  }
+  .sticky-wrapper {
+    position: relative !important;
+    height: auto !important;
+    overflow-x: auto;
+    padding: 20px 0;
+  }
 }
 
 /* skip layout/paint of offscreen gallery tiles */
