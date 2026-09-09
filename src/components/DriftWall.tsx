@@ -169,6 +169,25 @@ const DriftWall = ({
 
   const [containerHeight, setContainerHeight] = useState(600);
   const [reduced, setReduced] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const effColumns = isMobile ? Math.min(columns, 3) : columns;
+  const effTileWidth = isMobile ? Math.round(tileWidth * 0.72) : tileWidth;
+  const effTileHeight = isMobile ? Math.round(tileHeight * 0.72) : tileHeight;
+  const effGap = isMobile ? Math.max(8, Math.round(gap * 0.65)) : gap;
+  const effTilt = isMobile ? tilt * 0.4 : tilt;
+  const effTurn = isMobile ? turn * 0.4 : turn;
+  const effDepth = isMobile ? Math.round(depth * 0.3) : depth;
+  const effPerspective = isMobile ? Math.round(perspective * 0.85) : perspective;
+  const effScale = isMobile ? 1 : 1.18;
 
   useEffect(() => {
     setReduced(prefersReducedMotion());
@@ -179,19 +198,19 @@ const DriftWall = ({
   }, []);
 
   const columnItems = useMemo<DriftWallItem[][]>(() => {
-    const cols: DriftWallItem[][] = Array.from({ length: columns }, () => []);
-    items.forEach((item, i) => cols[i % columns].push(item));
+    const cols: DriftWallItem[][] = Array.from({ length: effColumns }, () => []);
+    items.forEach((item, i) => cols[i % effColumns].push(item));
     return cols.map((col) => (col.length ? col : items.slice(0, 1)));
-  }, [items, columns]);
+  }, [items, effColumns]);
 
   const columnMeta = useMemo<ColumnMeta[]>(() => {
-    const unit = tileHeight + gap;
+    const unit = effTileHeight + effGap;
     return columnItems.map((col) => {
       const copyHeight = Math.max(unit, col.length * unit);
       const copies = Math.max(2, Math.ceil((containerHeight * 1.6) / copyHeight) + 1);
       return { copyHeight, copies };
     });
-  }, [columnItems, tileHeight, gap, containerHeight]);
+  }, [columnItems, effTileHeight, effGap, containerHeight]);
 
   useLayoutEffect(() => {
     if (!containerRef.current) return;
@@ -234,11 +253,11 @@ const DriftWall = ({
       const plane = planeRef.current;
       if (!plane) return;
       plane.style.transform =
-        `translate(-50%, -50%) scale(1.18) ` +
-        `rotateX(${tilt + py}deg) rotateY(${turn + px}deg) rotateZ(${roll}deg) ` +
-        `translateZ(${-depth}px)`;
+        `translate(-50%, -50%) scale(${effScale}) ` +
+        `rotateX(${effTilt + py}deg) rotateY(${effTurn + px}deg) rotateZ(${roll}deg) ` +
+        `translateZ(${-effDepth}px)`;
     },
-    [tilt, turn, roll, depth]
+    [effTilt, effTurn, roll, effDepth, effScale]
   );
 
   const startLoop = useCallback(() => {
@@ -377,17 +396,17 @@ const DriftWall = ({
   const cssVars = useMemo<CSSProperties>(
     () =>
       ({
-        "--dw-tile-w": `${tileWidth}px`,
-        "--dw-tile-h": `${tileHeight}px`,
-        "--dw-gap": `${gap}px`,
+        "--dw-tile-w": `${effTileWidth}px`,
+        "--dw-tile-h": `${effTileHeight}px`,
+        "--dw-gap": `${effGap}px`,
         "--dw-radius": `${radius}px`,
         "--dw-dim": dim,
         "--dw-overlay": overlayColor,
-        perspective: `${perspective}px`,
+        perspective: `${effPerspective}px`,
         perspectiveOrigin: "50% 50%",
         ...style,
       }) as CSSProperties,
-    [tileWidth, tileHeight, gap, radius, dim, overlayColor, perspective, style]
+    [effTileWidth, effTileHeight, effGap, radius, dim, overlayColor, effPerspective, style]
   );
 
   return (
@@ -419,7 +438,7 @@ const DriftWall = ({
                     <div
                       key={`${c}-${copyIndex}-${itemIndex}`}
                       className="relative block flex-none w-full h-[calc(var(--dw-tile-h)+var(--dw-gap))] [transform-style:preserve-3d]"
-                      style={{ contentVisibility: "auto" as never, containIntrinsicSize: `${tileWidth}px ${tileHeight + gap}px` as never }}
+                      style={{ contentVisibility: "auto" as never, containIntrinsicSize: `${effTileWidth}px ${effTileHeight + effGap}px` as never }}
                     >
                       <span className="absolute inset-[calc(var(--dw-gap)/2)] block overflow-hidden bg-[#0a1218] rounded-[var(--dw-radius)] opacity-[var(--dw-dim)] [transform:translateZ(0)]">
                         <DriftTileImg
@@ -427,8 +446,8 @@ const DriftWall = ({
                           reduced={reduced}
                           eager={copyIndex === 0 && itemIndex === 0}
                           blurDataURL={item.blurDataURL}
-                          tileWidth={tileWidth}
-                          tileHeight={tileHeight}
+                          tileWidth={effTileWidth}
+                          tileHeight={effTileHeight}
                         />
                         <span className="pointer-events-none absolute inset-0 bg-[var(--dw-overlay)] opacity-[0.28]" aria-hidden="true" />
                       </span>
