@@ -62,6 +62,7 @@ export default function PageTransition({ children }: { children: React.ReactNode
       if (!overlay) return;
       e.preventDefault();
       coveringRef.current = true;
+      window.dispatchEvent(new CustomEvent("ma:page-transition-cover"));
       gsap.killTweensOf(overlay);
       gsap.set(overlay, { yPercent: -101 });
       gsap.to(overlay, {
@@ -166,9 +167,15 @@ export default function PageTransition({ children }: { children: React.ReactNode
         className="pointer-events-none fixed inset-0 z-40 bg-background will-change-transform"
         style={{ transform: "translateY(-101%)", borderRadius: "0 0 48px 48px" }}
       >
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-32 left-1/2 h-[520px] w-[720px] -translate-x-1/2 rounded-full bg-white/[0.04] blur-[80px]" />
-          <div className="absolute -bottom-40 left-1/2 h-[480px] w-[680px] -translate-x-1/2 rounded-full bg-white/[0.025] blur-[70px]" />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+          <div
+            className="absolute -top-32 left-1/2 h-[520px] w-[720px] -translate-x-1/2 rounded-full"
+            style={{ background: "radial-gradient(circle at center, rgba(255,255,255,0.04) 0%, transparent 70%)" }}
+          />
+          <div
+            className="absolute -bottom-40 left-1/2 h-[680px] w-[680px] -translate-x-1/2 rounded-full"
+            style={{ background: "radial-gradient(circle at center, rgba(255,255,255,0.025) 0%, transparent 70%)" }}
+          />
         </div>
         <div className="absolute inset-x-0 bottom-0 h-px bg-white/10" />
       </div>

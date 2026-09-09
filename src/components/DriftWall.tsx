@@ -52,38 +52,36 @@ const cx = (...parts: (string | false | undefined)[]) => parts.filter(Boolean).j
 const prefersReducedMotion = (): boolean =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-function DriftTileImg({ src, reduced }: { src: string; reduced: boolean }) {
+function DriftTileImg({ src, reduced, eager }: { src: string; reduced: boolean; eager?: boolean }) {
   const [loaded, setLoaded] = useState(false);
   const ref = useRef<HTMLImageElement>(null);
+  const trigger = useCallback(() => setLoaded(true), []);
   useEffect(() => {
     const el = ref.current;
-    if (el?.complete && el.naturalWidth > 0) setLoaded(true);
-  }, [src]);
+    if (el?.complete && el.naturalWidth > 0) {
+      const id = requestAnimationFrame(() => requestAnimationFrame(trigger));
+      return () => cancelAnimationFrame(id);
+    }
+  }, [src, trigger]);
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       ref={ref}
       src={src}
       alt=""
-      loading="lazy"
-      decoding="async"
+      loading={eager ? "eager" : "lazy"}
+      fetchPriority={eager ? "high" : "auto"}
+      decoding={eager ? "sync" : "async"}
       draggable={false}
-      onLoad={() => setLoaded(true)}
-      onError={() => setLoaded(true)}
+      onLoad={trigger}
+      onError={trigger}
+      suppressHydrationWarning
       className={cx(
         "block h-full w-full select-none object-cover",
-        reduced
-          ? loaded
-            ? "opacity-100"
-            : "opacity-0"
-          : loaded
-            ? "opacity-100 scale-100 blur-0"
-            : "opacity-0 scale-[1.06] blur-[6px]"
+        reduced ? (loaded ? "opacity-100" : "opacity-0") : loaded ? "opacity-100 scale-100 blur-0" : "opacity-0 scale-[1.06] blur-[6px]"
       )}
       style={{
-        transition: reduced
-          ? "opacity 220ms ease-out"
-          : "opacity 700ms ease-out, transform 700ms ease-out, filter 700ms ease-out",
+        transition: reduced ? "opacity 360ms ease-out" : "opacity 700ms ease-out, transform 700ms ease-out, filter 700ms ease-out",
         willChange: loaded ? "auto" : "opacity, transform, filter",
       }}
     />
@@ -127,6 +125,8 @@ const DriftWall = ({
   const pointerRef = useRef({ x: 0, y: 0 });
   const pointerDampedRef = useRef({ x: 0, y: 0 });
   const lastTsRef = useRef<number | null>(null);
+  const pausedRef = useRef(false);
+  const visibleRef = useRef(true);
 
   const [containerHeight, setContainerHeight] = useState(600);
   const [reduced, setReduced] = useState(false);
@@ -197,7 +197,59 @@ const DriftWall = ({
   );
 
   useEffect(() => {
+    const onCover = () => {
+      pausedRef.current = true;
+    };
+    const onDone = () => {
+      pausedRef.current = false;
+      lastTsRef.current = null;
+    };
+    const onVis = () => {
+      if (document.hidden) pausedRef.current = true;
+      else if (visibleRef.current) {
+        pausedRef.current = false;
+        lastTsRef.current = null;
+      }
+    };
+    window.addEventListener("ma:page-transition-cover", onCover);
+    window.addEventListener("ma:page-transition-done", onDone);
+    window.addEventListener("ma:splash-exit", onCover);
+    window.addEventListener("ma:splash-done", onDone);
+    document.addEventListener("visibilitychange", onVis);
+    const root = containerRef.current;
+    let io: IntersectionObserver | null = null;
+    if (root && typeof IntersectionObserver !== "undefined") {
+      io = new IntersectionObserver(
+        ([entry]) => {
+          visibleRef.current = !!entry?.isIntersecting;
+          if (!entry?.isIntersecting) pausedRef.current = true;
+          else if (!document.hidden) {
+            pausedRef.current = false;
+            lastTsRef.current = null;
+          }
+        },
+        { threshold: 0 }
+      );
+      io.observe(root);
+    }
+    return () => {
+      window.removeEventListener("ma:page-transition-cover", onCover);
+      window.removeEventListener("ma:page-transition-done", onDone);
+      window.removeEventListener("ma:splash-exit", onCover);
+      window.removeEventListener("ma:splash-done", onDone);
+      document.removeEventListener("visibilitychange", onVis);
+      if (io && root) io.unobserve(root);
+      io?.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
     const animate = (ts: number) => {
+      if (pausedRef.current || !visibleRef.current || document.hidden) {
+        lastTsRef.current = null;
+        rafRef.current = requestAnimationFrame(animate);
+        return;
+      }
       if (lastTsRef.current === null) lastTsRef.current = ts;
       const dt = Math.min(0.05, Math.max(0, ts - lastTsRef.current) / 1000);
       lastTsRef.current = ts;
@@ -305,7 +357,7 @@ const DriftWall = ({
                       className="relative block flex-none w-full h-[calc(var(--dw-tile-h)+var(--dw-gap))] [transform-style:preserve-3d]"
                     >
                       <span className="absolute inset-[calc(var(--dw-gap)/2)] block overflow-hidden bg-[#0a1218] rounded-[var(--dw-radius)] opacity-[var(--dw-dim)] [transform:translateZ(0)]">
-                        <DriftTileImg src={item.image} reduced={reduced} />
+                        <DriftTileImg src={item.image} reduced={reduced} eager={copyIndex === 0 && itemIndex === 0} />
                         <span className="pointer-events-none absolute inset-0 bg-[var(--dw-overlay)] opacity-[0.28]" aria-hidden="true" />
                       </span>
                     </div>
